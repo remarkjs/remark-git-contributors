@@ -1,0 +1,36 @@
+{
+  "name": "remark-gh-contributors",
+  "version": "0.0.0",
+  "description": "Asynchronous remark plugin to inject GitHub contributors into a markdown table",
+  "license": "MIT",
+  "author": "Vincent Weevers",
+  "scripts": {
+    "test": "standard && node test"
+  },
+  "dependencies": {
+    "github-base": "~0.5.4",
+    "github-contributors": "~0.4.1",
+    "github-from-package": "0.0.0",
+    "remark-contributors": "~3.1.0",
+    "resolve": "~1.7.1",
+    "run-parallel": "~1.1.9"
+  },
+  "devDependencies": {
+    "remark-cli": "~5.0.0",
+    "standard": "~11.0.1",
+    "tape": "~4.9.0"
+  },
+  "keywords": [
+    "contributors",
+    "github",
+    "inject",
+    "markdown",
+    "remark"
+  ],
+  "engines": {
+    "node": ">=6"
+  },
+  "repository": "vweevers/remark-gh-contributors",
+  "bugs": "https://github.com/vweevers/remark-gh-contributors/issues",
+  "homepage": "https://github.com/vweevers/remark-gh-contributors"
+}
