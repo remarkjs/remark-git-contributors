@@ -136,6 +136,7 @@ function getMetadata (cwd, file, contributors) {
     for (let [key, contributor] of Object.entries(obj)) {
       if (!contributor.github) {
         // Assume that `key` is GitHub username
+        // TODO: remove this once new level-community is out
         contributor = Object.assign({}, contributor, { github: key })
       }
 
@@ -146,11 +147,11 @@ function getMetadata (cwd, file, contributors) {
   const meta = {}
 
   for (let contributor of contributors) {
-    if (contributor.github) {
-      meta[contributor.github] = contributor
+    if (contributor.email) {
+      meta[contributor.email] = contributor
     } else {
-      const reason = `no github username in ${JSON.stringify(contributor)}`
-      const origin = `${plugin}:require-github-username`
+      const reason = `no email in ${JSON.stringify(contributor)}`
+      const origin = `${plugin}:require-email`
 
       file.warn(reason, null, origin)
     }
@@ -164,9 +165,9 @@ function addMetadata (meta, contributor) {
     contributor = parseAuthor(contributor)
   }
 
-  const github = contributor && contributor.github
+  const email = contributor && contributor.email
 
-  if (github) {
-    meta[github] = Object.assign({}, meta[github], contributor)
+  if (email) {
+    meta[email] = Object.assign({}, meta[email], contributor)
   }
 }
