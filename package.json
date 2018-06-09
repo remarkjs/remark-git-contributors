@@ -5,6 +5,7 @@
   "license": "MIT",
   "author": {
     "name": "Vincent Weevers",
+    "email": "mail@vincentweevers.nl",
     "github": "vweevers",
     "twitter": "vweevers"
   },
@@ -13,14 +14,11 @@
     "remark": "remark --use . README.md -o"
   },
   "dependencies": {
-    "github-base": "~0.5.4",
-    "github-contributors": "~0.4.1",
-    "github-from-package": "0.0.0",
+    "git-contributors": "~0.2.3",
     "mdast-util-heading-range": "~2.1.0",
     "parse-author": "~2.0.0",
-    "remark-contributors": "github:vweevers/remark-contributors#prevent-empty-links",
-    "resolve": "~1.7.1",
-    "run-parallel": "~1.1.9"
+    "remark-contributors": "github:vweevers/remark-contributors#custom-formatters",
+    "resolve": "~1.7.1"
   },
   "devDependencies": {
     "remark-cli": "~5.0.0",

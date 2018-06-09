@@ -1,16 +1,14 @@
 'use strict'
 
-const githubFromPackage = require('github-from-package')
-const getContributors = require('github-contributors')
+const gitContributors = require('git-contributors').GitContributors
 const injectContributors = require('remark-contributors')
-const parallel = require('run-parallel')
-const GitHub = require('github-base')
 const resolve = require('resolve')
 const heading = require('mdast-util-heading-range')
 const parseAuthor = require('parse-author')
 const path = require('path')
 const fs = require('fs')
 const plugin = require('./package.json').name
+const headers = require('./headers')
 
 module.exports = function attacher (opts) {
   if (typeof opts === 'string') {
@@ -19,74 +17,75 @@ module.exports = function attacher (opts) {
     opts = {}
   }
 
-  // Required scopes: public_repo, read:user
-  const token = opts.token || process.env.GITHUB_TOKEN
-
   return function transform (root, file, callback) {
-    if (!token) {
-      file.info('skipping: no github token provided', null, `${plugin}:require-token`)
-      return callback()
-    }
-
     if (!hasHeading(root, /^contributors$/i)) {
       file.info('skipping: no contributors heading found', null, `${plugin}:require-heading`)
       return callback()
     }
 
     const cwd = path.resolve(opts.cwd || file.cwd || '.')
-    const meta = getMetadata(cwd, file, opts.contributors)
+    const indices = indexContributors(cwd, opts.contributors)
     const json = fs.readFileSync(path.join(cwd, 'package.json'), 'utf8')
     const pkg = JSON.parse(json)
-    const slug = githubFromPackage(pkg).split('/').slice(-2).join('/')
-    const github = new GitHub({ token })
 
-    addMetadata(meta, pkg.author)
+    indexContributor(indices, pkg.author)
 
     if (Array.isArray(pkg.contributors)) {
-      pkg.contributors.forEach(addMetadata.bind(null, meta))
+      pkg.contributors.forEach(indexContributor.bind(null, indices))
     }
 
-    getContributors(slug, { token }, function (err, contributors) {
+    gitContributors.list(cwd, function (err, contributors) {
       if (err) return callback(err)
 
       if (file.stem && file.stem.toLowerCase() === 'readme') {
         contributors = contributors.slice(0, 10)
       }
 
-      const tasks = contributors.map(({ login }) => {
-        return function (next) {
-          github.get(`/users/${login}`, function (err, res) {
-            if (err) return next(err)
+      contributors = contributors.map(({ name, email }) => {
+        if (!email) {
+          file.warn(`no git email for ${name}`, null, `${plugin}:require-git-email`)
+          return
+        }
 
-            const extra = meta[login] || {}
-            const name = extra.name || res.name
+        const metadata = indices.email[email] || {}
 
-            let twitter = extra.twitter
+        if (email.endsWith('@users.noreply.github.com')) {
+          metadata.github = email.slice(0, -25)
+          indexValue(indices.github, metadata.github, metadata)
+        }
 
-            // TODO: not supported by remark-contributors. It supports custom
-            // headers, but not with links or @mentions or other formatting.
-            let mastodon = extra.mastodon
-
-            if (!twitter && /^https?:\/\/twitter\.com/.test(res.blog)) {
-              twitter = res.blog
-            }
-
-            if (!twitter && !mastodon) {
-              file.warn(`no social profile for @${login}`, null, `${plugin}:social`)
-            }
-
-            next(null, { name, github: login, twitter })
-          })
+        return {
+          email,
+          name: metadata.name || name,
+          github: metadata.github,
+          twitter: metadata.twitter,
+          mastodon: metadata.mastodon
         }
       })
 
-      parallel(tasks, function (err, contributors) {
-        if (err) return callback(err)
+      contributors = contributors
+        .filter(Boolean)
+        .filter(dedup(['email', 'github', 'twitter', 'mastodon']))
 
-        injectContributors({ contributors })(root, file)
-        callback()
-      })
+      injectContributors({ contributors, headers })(root, file)
+      callback()
     })
+  }
+}
+
+function dedup (keys) {
+  const map = new Map(keys.map(key => [key, new Set()]))
+
+  return function (contributor) {
+    for (let key of keys) {
+      if (contributor[key]) {
+        const seen = map.get(key)
+        if (seen.has(contributor[key])) return false
+        seen.add(contributor[key])
+      }
+    }
+
+    return true
   }
 }
 
@@ -105,9 +104,14 @@ function hasHeading (tree, test) {
 // - nested object: { contributors }
 // - array of contributors
 // - object of contributors (key is assumed to be GitHub username)
-function getMetadata (cwd, file, contributors) {
+function indexContributors (cwd, contributors) {
+  const indices = {
+    email: {},
+    github: {}
+  }
+
   if (contributors == null) {
-    return {}
+    return indices
   }
 
   if (typeof contributors === 'string') {
@@ -127,16 +131,16 @@ function getMetadata (cwd, file, contributors) {
 
   if (typeof contributors === 'object' && !Array.isArray(contributors)) {
     if (contributors.contributors) {
-      return getMetadata(cwd, file, contributors.contributors)
+      return indexContributors(cwd, contributors.contributors)
     }
 
     const obj = contributors
     contributors = []
 
     for (let [key, contributor] of Object.entries(obj)) {
+      // TODO: remove this once new level-community is out
       if (!contributor.github) {
         // Assume that `key` is GitHub username
-        // TODO: remove this once new level-community is out
         contributor = Object.assign({}, contributor, { github: key })
       }
 
@@ -144,34 +148,36 @@ function getMetadata (cwd, file, contributors) {
     }
   }
 
-  const meta = {}
-
   for (let contributor of contributors) {
-    const emails = [].concat(contributor.email || []).filter(Boolean)
-
-    if (emails.length > 0) {
-      for (let email of emails) {
-        meta[email] = contributor
-      }
-    } else {
-      const reason = `no email in ${JSON.stringify(contributor)}`
-      const origin = `${plugin}:require-email`
-
-      file.warn(reason, null, origin)
-    }
+    indexContributor(indices, contributor)
   }
 
-  return meta
+  return indices
 }
 
-function addMetadata (meta, contributor) {
+function indexContributor (indices, contributor) {
   if (typeof contributor === 'string') {
     contributor = parseAuthor(contributor)
+  } else {
+    contributor = Object.assign({}, contributor)
   }
 
-  const email = contributor && contributor.email
+  const emails = (contributor.emails || []).concat(contributor.email || [])
 
-  if (email) {
-    meta[email] = Object.assign({}, meta[email], contributor)
+  for (let email of emails) {
+    indexValue(indices.email, email, contributor)
+  }
+
+  indexValue(indices.github, contributor.github, contributor)
+}
+
+function indexValue (index, value, contributor) {
+  if (value) {
+    if (index[value]) {
+      // Merge in place
+      Object.assign(contributor, index[value])
+    }
+
+    index[value] = contributor
   }
 }

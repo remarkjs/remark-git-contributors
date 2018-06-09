@@ -110,9 +110,9 @@ With [npm](https://npmjs.org) do:
 
 ## Contributors
 
-| Name                | GitHub                                       | Twitter                                       |
-| ------------------- | -------------------------------------------- | --------------------------------------------- |
-| **Vincent Weevers** | [**@vweevers**](https://github.com/vweevers) | [**@vweevers**](https://twitter.com/vweevers) |
+| Name                | GitHub                                       | Social                                                |
+| ------------------- | -------------------------------------------- | ----------------------------------------------------- |
+| **Vincent Weevers** | [**@vweevers**](https://github.com/vweevers) | [**@vweevers@twitter**](https://twitter.com/vweevers) |
 
 ## License
 
