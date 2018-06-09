@@ -39,6 +39,12 @@ module.exports = function attacher (opts) {
     const slug = githubFromPackage(pkg).split('/').slice(-2).join('/')
     const github = new GitHub({ token })
 
+    addMetadata(meta, pkg.author)
+
+    if (Array.isArray(pkg.contributors)) {
+      pkg.contributors.forEach(addMetadata.bind(null, meta))
+    }
+
     getContributors(slug, { token }, function (err, contributors) {
       if (err) return callback(err)
 
@@ -130,4 +136,12 @@ function getMetadata (cwd, file, contributors) {
   }
 
   return meta
+}
+
+function addMetadata (meta, contributor) {
+  const github = contributor && contributor.github
+
+  if (github) {
+    meta[github] = Object.assign({}, meta[github], contributor)
+  }
 }
