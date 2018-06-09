@@ -20,7 +20,6 @@ module.exports = function attacher (opts) {
 
   // Required scopes: public_repo, read:user
   const token = opts.token || process.env.GITHUB_TOKEN
-  const cwd = path.resolve(opts.cwd || '.')
 
   return function transform (root, file, callback) {
     if (!token) {
@@ -33,6 +32,7 @@ module.exports = function attacher (opts) {
       return callback()
     }
 
+    const cwd = path.resolve(opts.cwd || file.cwd || '.')
     const meta = getMetadata(cwd, file, opts.contributors)
     const json = fs.readFileSync(path.join(cwd, 'package.json'), 'utf8')
     const pkg = JSON.parse(json)
@@ -110,7 +110,18 @@ function getMetadata (cwd, file, contributors) {
   }
 
   if (typeof contributors === 'string') {
-    contributors = require(resolve.sync(contributors, { basedir: cwd }))
+    let path
+
+    try {
+      path = resolve.sync(contributors, { basedir: cwd })
+    } catch (err) {
+      if (err.code !== 'MODULE_NOT_FOUND') throw err
+
+      // Fallback to process.cwd()
+      path = resolve.sync(contributors, { basedir: process.cwd() })
+    }
+
+    contributors = require(path)
   }
 
   if (typeof contributors === 'object') {
