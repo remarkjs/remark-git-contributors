@@ -59,13 +59,22 @@ module.exports = function attacher (opts) {
 
             const extra = meta[login] || {}
             const name = extra.name || res.name
-            const social = extra.twitter || extra.mastodon // TODO
 
-            if (!social) {
+            let twitter = extra.twitter
+
+            // TODO: not supported by remark-contributors. It supports custom
+            // headers, but not with links or @mentions or other formatting.
+            let mastodon = extra.mastodon
+
+            if (!twitter && /^https?:\/\/twitter\.com/.test(res.blog)) {
+              twitter = res.blog
+            }
+
+            if (!twitter && !mastodon) {
               file.warn(`no social profile for @${login}`, null, `${plugin}:social`)
             }
 
-            next(null, { name, github: login })
+            next(null, { name, github: login, twitter })
           })
         }
       })
