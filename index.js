@@ -124,7 +124,7 @@ function getMetadata (cwd, file, contributors) {
     contributors = require(path)
   }
 
-  if (typeof contributors === 'object') {
+  if (typeof contributors === 'object' && !Array.isArray(contributors)) {
     if (contributors.contributors) {
       return getMetadata(cwd, file, contributors.contributors)
     }
