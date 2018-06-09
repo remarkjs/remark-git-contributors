@@ -6,6 +6,7 @@ const injectContributors = require('remark-contributors')
 const parallel = require('run-parallel')
 const GitHub = require('github-base')
 const resolve = require('resolve')
+const heading = require('mdast-util-heading-range')
 const path = require('path')
 const fs = require('fs')
 const plugin = require('./package.json').name
@@ -23,7 +24,12 @@ module.exports = function attacher (opts) {
 
   return function transform (root, file, callback) {
     if (!token) {
-      file.info('no github token provided', null, `${plugin}:require-token`)
+      file.info('skipping: no github token provided', null, `${plugin}:require-token`)
+      return callback()
+    }
+
+    if (!hasHeading(root, /^contributors$/i)) {
+      file.info('skipping: no contributors heading found', null, `${plugin}:require-heading`)
       return callback()
     }
 
@@ -66,6 +72,16 @@ module.exports = function attacher (opts) {
       })
     })
   }
+}
+
+function hasHeading (tree, test) {
+  let found = false
+
+  heading(tree, test, function () {
+    found = true
+  })
+
+  return found
 }
 
 // Supports:
