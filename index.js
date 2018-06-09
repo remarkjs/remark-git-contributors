@@ -147,8 +147,12 @@ function getMetadata (cwd, file, contributors) {
   const meta = {}
 
   for (let contributor of contributors) {
-    if (contributor.email) {
-      meta[contributor.email] = contributor
+    const emails = [].concat(contributor.email || []).filter(Boolean)
+
+    if (emails.length > 0) {
+      for (let email of emails) {
+        meta[email] = contributor
+      }
     } else {
       const reason = `no email in ${JSON.stringify(contributor)}`
       const origin = `${plugin}:require-email`
