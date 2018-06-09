@@ -1,6 +1,6 @@
 {
   "name": "remark-gh-contributors",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "Asynchronous remark plugin to inject GitHub contributors into a markdown table",
   "license": "MIT",
   "author": {
