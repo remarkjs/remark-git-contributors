@@ -7,6 +7,7 @@ const parallel = require('run-parallel')
 const GitHub = require('github-base')
 const resolve = require('resolve')
 const heading = require('mdast-util-heading-range')
+const parseAuthor = require('parse-author')
 const path = require('path')
 const fs = require('fs')
 const plugin = require('./package.json').name
@@ -159,6 +160,10 @@ function getMetadata (cwd, file, contributors) {
 }
 
 function addMetadata (meta, contributor) {
+  if (typeof contributor === 'string') {
+    contributor = parseAuthor(contributor)
+  }
+
   const github = contributor && contributor.github
 
   if (github) {
