@@ -9,6 +9,14 @@
 [![Dependency status](https://img.shields.io/david/vweevers/remark-gh-contributors.svg?style=flat-square)](https://david-dm.org/vweevers/remark-gh-contributors)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg?style=flat-square)](https://standardjs.com)
 
+## Table of Contents
+
+-   [Usage](#usage)
+-   [API](#api)
+-   [Install](#install)
+-   [Contributors](#contributors)
+-   [License](#license)
+
 ## Usage
 
 With [`remark-cli`](https://www.npmjs.com/package/remark-cli), modifying a markdown file in place (`-o`):

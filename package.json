@@ -23,8 +23,17 @@
   },
   "devDependencies": {
     "remark-cli": "~5.0.0",
+    "remark-toc": "~5.0.0",
     "standard": "~11.0.1",
     "tape": "~4.9.0"
+  },
+  "remarkConfig": {
+    "plugins": {
+      "remark-toc": {
+        "maxDepth": 2,
+        "tight": true
+      }
+    }
   },
   "keywords": [
     "contributors",
