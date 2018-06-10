@@ -1,12 +1,12 @@
-# remark-gh-contributors [wip]
+# remark-git-contributors
 
 > Asynchronous [`remark`](https://github.com/remarkjs/remark) plugin to inject `git` contributors into a markdown table. Collects contributors from `git` history, deduplicates them, augments it with metadata found in options, a module or `package.json` and calls [`remark-contributors`](https://github.com/hughsk/remark-contributors) to render the markdown table.
 
-[![npm status](http://img.shields.io/npm/v/remark-gh-contributors.svg?style=flat-square)](https://www.npmjs.org/package/remark-gh-contributors)
-[![node](https://img.shields.io/node/v/remark-gh-contributors.svg?style=flat-square)](https://www.npmjs.org/package/remark-gh-contributors)
-[![Travis build status](https://img.shields.io/travis/vweevers/remark-gh-contributors.svg?style=flat-square&label=travis)](http://travis-ci.org/vweevers/remark-gh-contributors)
-[![AppVeyor build status](https://img.shields.io/appveyor/ci/vweevers/remark-gh-contributors.svg?style=flat-square&label=appveyor)](https://ci.appveyor.com/project/vweevers/remark-gh-contributors)
-[![Dependency status](https://img.shields.io/david/vweevers/remark-gh-contributors.svg?style=flat-square)](https://david-dm.org/vweevers/remark-gh-contributors)
+[![npm status](http://img.shields.io/npm/v/remark-git-contributors.svg?style=flat-square)](https://www.npmjs.org/package/remark-git-contributors)
+[![node](https://img.shields.io/node/v/remark-git-contributors.svg?style=flat-square)](https://www.npmjs.org/package/remark-git-contributors)
+[![Travis build status](https://img.shields.io/travis/vweevers/remark-git-contributors.svg?style=flat-square&label=travis)](http://travis-ci.org/vweevers/remark-git-contributors)
+[![AppVeyor build status](https://img.shields.io/appveyor/ci/vweevers/remark-git-contributors.svg?style=flat-square&label=appveyor)](https://ci.appveyor.com/project/vweevers/remark-git-contributors)
+[![Dependency status](https://img.shields.io/david/vweevers/remark-git-contributors.svg?style=flat-square)](https://david-dm.org/vweevers/remark-git-contributors)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg?style=flat-square)](https://standardjs.com)
 
 ## Table of Contents
@@ -21,7 +21,7 @@
 
 With [`remark-cli`](https://www.npmjs.com/package/remark-cli), modifying a markdown file in place (`-o`):
 
-    remark --use remark-gh-contributors README.md -o
+    remark --use remark-git-contributors README.md -o
 
 ### Injection
 
@@ -31,7 +31,7 @@ If the plugin is run on a `README.md` (case- and extension-insensitive), it will
 
 What you might want to do: prior to running `remark`, add a `# Contributors` heading to a `CONTRIBUTORS.md` but not to `README.md`. This way you can use the same pipeline (possibly with other plugins) on both files, only injecting contributors into one:
 
-    remark --use remark-gh-contributors README.md CONTRIBUTORS.md -o
+    remark --use remark-git-contributors README.md CONTRIBUTORS.md -o
 
 ### Metadata
 
@@ -40,7 +40,7 @@ To augment user metadata, configure the plugin in your `package.json`:
 ```json
 "remarkConfig": {
   "plugins": {
-    "remark-gh-contributors": <options>
+    "remark-git-contributors": <options>
   }
 }
 ```
@@ -55,7 +55,7 @@ An an example, `level-js` uses metadata stored in [`level-community`](https://ww
 ```json
 "remarkConfig": {
   "plugins": {
-    "remark-gh-contributors": "level-community"
+    "remark-git-contributors": "level-community"
   }
 }
 ```
@@ -65,7 +65,7 @@ Alternatively, add the metadata inline:
 ```json
 "remarkConfig": {
   "plugins": {
-    "remark-gh-contributors": {
+    "remark-git-contributors": {
       "contributors": [{
         "name": "Sara",
         "email": "sara@example.com",
@@ -112,7 +112,7 @@ You can also add metadata to the [`author` or `contributors` fields](https://doc
 
 With [npm](https://npmjs.org) do:
 
-    npm install remark-gh-contributors
+    npm install remark-git-contributors
 
 ## Contributors
 

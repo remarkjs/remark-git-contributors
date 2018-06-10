@@ -1,5 +1,5 @@
 {
-  "name": "remark-gh-contributors",
+  "name": "remark-git-contributors",
   "version": "0.1.0",
   "description": "Asynchronous remark plugin to inject git contributors into a markdown table",
   "license": "MIT",
@@ -44,7 +44,7 @@
   "engines": {
     "node": ">=6"
   },
-  "repository": "vweevers/remark-gh-contributors",
-  "bugs": "https://github.com/vweevers/remark-gh-contributors/issues",
-  "homepage": "https://github.com/vweevers/remark-gh-contributors"
+  "repository": "vweevers/remark-git-contributors",
+  "bugs": "https://github.com/vweevers/remark-git-contributors/issues",
+  "homepage": "https://github.com/vweevers/remark-git-contributors"
 }
