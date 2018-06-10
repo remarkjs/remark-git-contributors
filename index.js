@@ -37,12 +37,7 @@ module.exports = function attacher (opts) {
     gitContributors.list(cwd, function (err, contributors) {
       if (err) return callback(err)
 
-      // TODO: first dedup, sum commits, resort, then slice.
-      if (file.stem && file.stem.toLowerCase() === 'readme') {
-        contributors = contributors.slice(0, 10)
-      }
-
-      contributors = contributors.map(({ name, email }) => {
+      contributors = contributors.map(({ name, email, commits }) => {
         if (!email) {
           file.warn(`no git email for ${name}`, null, `${plugin}:require-git-email`)
           return
@@ -59,6 +54,7 @@ module.exports = function attacher (opts) {
 
         return {
           email,
+          commits,
           name: metadata.name || name,
           github: metadata.github,
           twitter: metadata.twitter,
@@ -68,7 +64,12 @@ module.exports = function attacher (opts) {
 
       contributors = contributors
         .filter(Boolean)
-        .filter(dedup(['email', 'github', 'twitter', 'mastodon']))
+        .reduce(dedup(['email', 'github', 'twitter', 'mastodon']), [])
+        .sort((a, b) => b.commits - a.commits)
+
+      if (file.stem && file.stem.toLowerCase() === 'readme') {
+        contributors = contributors.slice(0, 10)
+      }
 
       injectContributors({ contributors, headers })(root, file)
       callback()
@@ -77,18 +78,24 @@ module.exports = function attacher (opts) {
 }
 
 function dedup (keys) {
-  const map = new Map(keys.map(key => [key, new Set()]))
+  const map = new Map(keys.map(key => [key, new Map()]))
 
-  return function (contributor) {
+  return function (acc, contributor) {
     for (let key of keys) {
       if (contributor[key]) {
-        const seen = map.get(key)
-        if (seen.has(contributor[key])) return false
-        seen.add(contributor[key])
+        const index = map.get(key)
+
+        if (index.has(contributor[key])) {
+          index.get(contributor[key]).commits += contributor.commits
+          return acc
+        }
+
+        index.set(contributor[key], contributor)
       }
     }
 
-    return true
+    acc.push(contributor)
+    return acc
   }
 }
 
