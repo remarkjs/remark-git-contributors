@@ -12,6 +12,7 @@
 ## Table of Contents
 
 -   [Usage](#usage)
+-   [Supported Properties](#supported-properties)
 -   [API](#api)
 -   [Install](#install)
 -   [Contributors](#contributors)
@@ -40,17 +41,21 @@ To augment user metadata, configure the plugin in your `package.json`:
 ```json
 "remarkConfig": {
   "plugins": {
-    "remark-git-contributors": <options>
+    "remark-git-contributors": {
+      "contributors": ..
+    }
   }
 }
 ```
 
-Where `options` is either:
+Where `contributors` is either:
 
--   An object in the form of `{ contributors }`;
--   A module id (or path to a file) that exports `contributors` or `{ contributors }`. Resolved relative to the [`cwd`](https://github.com/vfile/vfile#vfilecwd) of the markdown file or `process.cwd()` if it doesn't resolve.
+-   An array in the form of `[{ email, name, .. }, ..]`;
+-   A module id or path to a file that exports `contributors` or `{ contributors }`. Resolved relative to the [`cwd`](https://github.com/vfile/vfile#vfilecwd) of the markdown file or `process.cwd()` if it doesn't resolve.
 
-An an example, `level-js` uses metadata stored in [`level-community`](https://www.npmjs.com/package/level-community):
+Note that `remark-git-contributors` excludes people that are not in git history. This way the `contributors` metadata can be reused in multiple projects. Each contributor should at least have an `email` property to match against git email addresses. To counter the fact that people change their email address, contributors are also matched by `name` if present.
+
+As a shortcut you can replace the options object with a module id. For example, `level-js` uses metadata stored in [`level-community`](https://www.npmjs.com/package/level-community):
 
 ```json
 "remarkConfig": {
@@ -60,7 +65,7 @@ An an example, `level-js` uses metadata stored in [`level-community`](https://ww
 }
 ```
 
-Alternatively, add the metadata inline:
+Here's an example of inline metadata:
 
 ```json
 "remarkConfig": {
@@ -76,28 +81,17 @@ Alternatively, add the metadata inline:
 }
 ```
 
-The `contributors` value should be an array in the form of:
-
-```js
-[{ email, name, .. }, ..]
-```
-
-The `email` property is required.
-
-### Package Metadata
-
-You can also add metadata to the [`author` or `contributors` fields](https://docs.npmjs.com/files/package.json#people-fields-author-contributors) in `package.json`. For example:
+Alternatively, put the metadata in the [`author` or `contributors` fields](https://docs.npmjs.com/files/package.json#people-fields-author-contributors) in `package.json`. For example:
 
 ```json
 "author": {
   "name": "Sara",
   "email": "sara@example.com",
-  "github": "sara",
-  "twitter": "sara"
+  "github": "sara"
 }
 ```
 
-### Supported Metadata
+## Supported Properties
 
 -   `name`: overrides the name stored in git commits
 -   `github`: GitHub username
