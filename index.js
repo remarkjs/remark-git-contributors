@@ -69,7 +69,7 @@ module.exports = function attacher (opts) {
 
       contributors = contributors
         .filter(Boolean)
-        .reduce(dedup(['email', 'github', 'twitter', 'mastodon']), [])
+        .reduce(dedup(['email', 'name', 'github', 'twitter', 'mastodon']), [])
         .sort((a, b) => b.commits - a.commits)
 
       if (file.stem && file.stem.toLowerCase() === 'readme') {
