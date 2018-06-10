@@ -37,6 +37,7 @@ module.exports = function attacher (opts) {
     gitContributors.list(cwd, function (err, contributors) {
       if (err) return callback(err)
 
+      // TODO: first dedup, sum commits, resort, then slice.
       if (file.stem && file.stem.toLowerCase() === 'readme') {
         contributors = contributors.slice(0, 10)
       }
@@ -47,7 +48,9 @@ module.exports = function attacher (opts) {
           return
         }
 
-        const metadata = indices.email[email] || {}
+        const metadata = indices.email[email]
+          || indices.name[name.toLowerCase()]
+          || {}
 
         if (email.endsWith('@users.noreply.github.com')) {
           metadata.github = email.slice(0, -25)
@@ -107,7 +110,8 @@ function hasHeading (tree, test) {
 function indexContributors (cwd, contributors) {
   const indices = {
     email: {},
-    github: {}
+    github: {},
+    name: {}
   }
 
   if (contributors == null) {
@@ -169,10 +173,13 @@ function indexContributor (indices, contributor) {
   }
 
   indexValue(indices.github, contributor.github, contributor)
+  indexValue(indices.name, contributor.name, contributor)
 }
 
 function indexValue (index, value, contributor) {
   if (value) {
+    value = value.toLowerCase()
+
     if (index[value]) {
       // Merge in place
       Object.assign(contributor, index[value])
