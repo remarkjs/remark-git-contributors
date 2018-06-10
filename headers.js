@@ -39,7 +39,7 @@ exports.social = {
 
       return {
         type: 'link',
-        url: 'https://' + domain+ '/' + handle,
+        url: 'https://' + domain+ '/@' + handle,
         children: [{
           type: 'strong',
           children: [{ type: 'text', value: '@' + handle + '@' + domain }]
