@@ -52,6 +52,11 @@ module.exports = function attacher (opts) {
           indexValue(indices.github, metadata.github, metadata)
         }
 
+        if (name === 'Greenkeeper' || metadata.github === 'greenkeeper[bot]'
+          || metadata.github === 'greenkeeperio-bot') {
+          return
+        }
+
         return {
           email,
           commits,
