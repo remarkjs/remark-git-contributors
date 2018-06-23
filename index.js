@@ -19,7 +19,6 @@ module.exports = function attacher (opts) {
 
   return function transform (root, file, callback) {
     if (!hasHeading(root, /^contributors$/i)) {
-      file.info('skipping: no contributors heading found', null, `${plugin}:require-heading`)
       return callback()
     }
 
