@@ -46,7 +46,7 @@ exports.social = {
         }]
       }
     } else {
-      file.warn(`no social profile for ${contrib.email}`, null, `${plugin}:social`)
+      file.info(`no social profile for ${contrib.email}`, null, `${plugin}:social`)
     }
   }
 }
