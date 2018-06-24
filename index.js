@@ -4,11 +4,14 @@ const gitContributors = require('git-contributors').GitContributors
 const injectContributors = require('remark-contributors')
 const resolve = require('resolve')
 const heading = require('mdast-util-heading-range')
+const visit = require('unist-util-visit')
 const parseAuthor = require('parse-author')
 const path = require('path')
 const fs = require('fs')
 const plugin = require('./package.json').name
 const headers = require('./headers')
+
+const RE = /^contributors$/i
 
 module.exports = function attacher (opts) {
   if (typeof opts === 'string') {
@@ -18,7 +21,7 @@ module.exports = function attacher (opts) {
   }
 
   return function transform (root, file, callback) {
-    if (!hasHeading(root, /^contributors$/i)) {
+    if (!hasHeading(root, RE)) {
       return callback()
     }
 
@@ -75,6 +78,21 @@ module.exports = function attacher (opts) {
       }
 
       injectContributors({ contributors, headers })(root, file)
+
+      // Hack: add align property until hughsk/remark-contributors#8 lands.
+      visit(root, 'table', function (node, index, parent) {
+        const prev = parent && parent.children[index - 1]
+
+        if (prev && prev.type === 'heading') {
+          const child = prev.children && prev.children[0]
+
+          if (child && child.type === 'text' && RE.test(child.value)) {
+            // Also take this opportunity to change alignment to left
+            node.align = new Array(Object.keys(headers).length).fill('left')
+          }
+        }
+      })
+
       callback()
     })
   }
