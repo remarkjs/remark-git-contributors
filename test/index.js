@@ -37,9 +37,9 @@ function run (fixture, opts, test) {
 
   fs.writeFileSync(path.join(cwd, 'test'), '')
 
-  execFileSync('git', ['init', '.'], { cwd, stdio: 'ignore' })
-  execFileSync('git', ['add', 'test'], { cwd, stdio: 'ignore' })
-  execFileSync('git', ['commit', '-m', 'initial', '--author', TEST_AUTHOR], { cwd, stdio: 'ignore' })
+  execFileSync('git', ['init', '.'], { cwd, stdio: 'inherit' })
+  execFileSync('git', ['add', 'test'], { cwd, stdio: 'inherit' })
+  execFileSync('git', ['commit', '-m', 'initial', '--author', TEST_AUTHOR], { cwd, stdio: 'inherit' })
 
   const input = fs.readFileSync(inputFile, 'utf8').trim()
   const expected = fs.readFileSync(outputFile, 'utf8').trim()
