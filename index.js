@@ -44,17 +44,17 @@ module.exports = function attacher (opts) {
           return
         }
 
-        const metadata = indices.email[email]
-          || indices.name[name.toLowerCase()]
-          || {}
+        const metadata = indices.email[email] ||
+          indices.name[name.toLowerCase()] || {}
 
         if (email.endsWith('@users.noreply.github.com')) {
           metadata.github = email.slice(0, -25)
           indexValue(indices.github, metadata.github, metadata)
         }
 
-        if (name === 'Greenkeeper' || metadata.github === 'greenkeeper[bot]'
-          || metadata.github === 'greenkeeperio-bot') {
+        if (name === 'Greenkeeper' ||
+          metadata.github === 'greenkeeper[bot]' ||
+          metadata.github === 'greenkeeperio-bot') {
           return
         }
 
