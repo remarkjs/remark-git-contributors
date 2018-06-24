@@ -34,12 +34,11 @@ function run (fixture, opts, test) {
   const cwd = tmp()
   const inputFile = path.join(__dirname, 'fixture', fixture + '-input.md')
   const outputFile = path.join(__dirname, 'fixture', fixture + '-output.md')
-  const destFile = path.join(cwd, 'test.md')
 
-  fs.copyFileSync(inputFile, destFile)
+  fs.writeFileSync(path.join(cwd, 'test'), '')
 
   execFileSync('git', ['init', '.'], { cwd, stdio: 'ignore' })
-  execFileSync('git', ['add', 'test.md'], { cwd, stdio: 'ignore' })
+  execFileSync('git', ['add', 'test'], { cwd, stdio: 'ignore' })
   execFileSync('git', ['commit', '-m', 'initial', '--author', TEST_AUTHOR], { cwd, stdio: 'ignore' })
 
   const input = fs.readFileSync(inputFile, 'utf8').trim()
