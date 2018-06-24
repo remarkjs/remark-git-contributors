@@ -10,7 +10,6 @@ const plugin = require('..')
 
 const TEST_NAME = 'test'
 const TEST_EMAIL = 'test@localhost'
-const TEST_AUTHOR = `${TEST_NAME} <${TEST_EMAIL}>`
 
 test('basic', function (t) {
   run('00', {}, ({ cwd, actual, expected }) => {
@@ -38,8 +37,10 @@ function run (fixture, opts, test) {
   fs.writeFileSync(path.join(cwd, 'test'), '')
 
   execFileSync('git', ['init', '.'], { cwd, stdio: 'ignore' })
+  execFileSync('git', ['config', 'user.email', TEST_EMAIL], { cwd, stdio: 'ignore' })
+  execFileSync('git', ['config', 'user.name', TEST_NAME], { cwd, stdio: 'ignore' })
   execFileSync('git', ['add', 'test'], { cwd, stdio: 'ignore' })
-  execFileSync('git', ['commit', '-m', 'initial', '--author', TEST_AUTHOR], { cwd, stdio: 'ignore' })
+  execFileSync('git', ['commit', '-m', 'initial'], { cwd, stdio: 'ignore' })
 
   const input = fs.readFileSync(inputFile, 'utf8').trim()
   const expected = fs.readFileSync(outputFile, 'utf8').trim()
