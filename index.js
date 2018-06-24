@@ -77,7 +77,19 @@ module.exports = function attacher (opts) {
         contributors = contributors.slice(0, 10)
       }
 
-      injectContributors({ contributors, headers })(root, file)
+      const customHeaders = Object.assign({}, headers)
+
+      // Remove GitHub column if all cells would be empty
+      if (contributors.every(c => !c.github)) {
+        delete customHeaders.github
+      }
+
+      // Remove Social column if all cells would be empty
+      if (contributors.every(c => !c.twitter && !c.mastodon)) {
+        delete customHeaders.social
+      }
+
+      injectContributors({ contributors, headers: customHeaders })(root, file)
 
       // Hack: add align property until hughsk/remark-contributors#8 lands.
       visit(root, 'table', function (node, index, parent) {
@@ -88,7 +100,7 @@ module.exports = function attacher (opts) {
 
           if (child && child.type === 'text' && RE.test(child.value)) {
             // Also take this opportunity to change alignment to left
-            node.align = new Array(Object.keys(headers).length).fill('left')
+            node.align = new Array(Object.keys(customHeaders).length).fill('left')
           }
         }
       })

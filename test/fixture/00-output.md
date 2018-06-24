@@ -1,5 +1,5 @@
 # Contributors
 
-| Name     | GitHub | Social |
-| :------- | :----- | :----- |
-| **test** |        |        |
+| Name     |
+| :------- |
+| **test** |
