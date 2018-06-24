@@ -24,8 +24,7 @@ module.exports = function attacher (opts) {
 
     const cwd = path.resolve(opts.cwd || file.cwd || '.')
     const indices = indexContributors(cwd, opts.contributors)
-    const json = fs.readFileSync(path.join(cwd, 'package.json'), 'utf8')
-    const pkg = JSON.parse(json)
+    const pkg = maybePackage(cwd)
 
     indexContributor(indices, pkg.author)
 
@@ -78,6 +77,15 @@ module.exports = function attacher (opts) {
       injectContributors({ contributors, headers })(root, file)
       callback()
     })
+  }
+}
+
+function maybePackage (cwd) {
+  try {
+    const json = fs.readFileSync(path.join(cwd, 'package.json'), 'utf8')
+    return JSON.parse(json)
+  } catch (err) {
+    return {}
   }
 }
 
