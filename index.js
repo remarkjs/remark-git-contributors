@@ -48,7 +48,7 @@ module.exports = function attacher (opts) {
           indices.name[name.toLowerCase()] || {}
 
         if (email.endsWith('@users.noreply.github.com')) {
-          metadata.github = email.slice(0, -25)
+          metadata.github = email.slice(0, -25).replace(/^[\d]+\+/, '')
           indexValue(indices.github, metadata.github, metadata)
         }
 
