@@ -49,7 +49,7 @@ To augment user metadata, configure the plugin in your `package.json`:
 Where `contributors` is either:
 
 -   An array in the form of `[{ email, name, .. }, ..]`;
--   A module id or path to a file that exports `contributors` or `{ contributors }`. Resolved relative to the [`cwd`](https://github.com/vfile/vfile#vfilecwd) of the markdown file or `process.cwd()` if it doesn't resolve.
+-   A module id or path to a file that exports `contributors` or `{ contributors }`.
 
 Note that `remark-git-contributors` excludes people that are not in git history. This way the `contributors` metadata can be reused in multiple projects. Each contributor should at least have an `email` property to match against git email addresses. To counter the fact that people change their email address, contributors are also matched by `name` if present.
 
@@ -103,6 +103,8 @@ Alternatively, put the metadata in the [`author` or `contributors` fields](https
 The options object may contain the following properties:
 
 - `limit`: number. Only render the top `<limit>` contributors, sorted by commit count. By default, all contributors are included.
+- `contributors`: array or module id, see above.
+- `cwd`: working directory from which to resolve `contributors` module (if any). Defaults to [`cwd`](https://github.com/vfile/vfile#vfilecwd) of the markdown file, falling back to `process.cwd()` if it doesn't resolve.
 
 ## Install
 
