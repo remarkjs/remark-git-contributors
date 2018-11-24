@@ -90,9 +90,14 @@ module.exports = function attacher (opts) {
         delete customHeaders.social
       }
 
-      injectContributors({ contributors, headers: customHeaders })(root, file)
+      injectContributors({
+        contributors,
+        headers: customHeaders,
+        align: 'left'
+      })(root, file)
 
-      // Hack: add align property until hughsk/remark-contributors#8 lands.
+      // TODO: The "align" option above has no effect until hughsk/remark-contributors#11 lands.
+      // When it does, remove the following hack (as well as the unist-util-visit dependency).
       visit(root, 'table', function (node, index, parent) {
         const prev = parent && parent.children[index - 1]
 
@@ -100,7 +105,6 @@ module.exports = function attacher (opts) {
           const child = prev.children && prev.children[0]
 
           if (child && child.type === 'text' && RE.test(child.value)) {
-            // Also take this opportunity to change alignment to left
             node.align = new Array(Object.keys(customHeaders).length).fill('left')
           }
         }
