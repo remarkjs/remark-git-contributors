@@ -2,12 +2,12 @@
 
 > Asynchronous [`remark`](https://github.com/remarkjs/remark) plugin to inject `git` contributors into a markdown table. Collects contributors from `git` history, deduplicates them, augments it with metadata found in options, a module or `package.json` and calls [`remark-contributors`](https://github.com/hughsk/remark-contributors) to render the markdown table.
 
-[![npm status](http://img.shields.io/npm/v/remark-git-contributors.svg?style=flat-square)](https://www.npmjs.org/package/remark-git-contributors)
-[![node](https://img.shields.io/node/v/remark-git-contributors.svg?style=flat-square)](https://www.npmjs.org/package/remark-git-contributors)
-[![Travis build status](https://img.shields.io/travis/vweevers/remark-git-contributors.svg?style=flat-square&label=travis)](http://travis-ci.org/vweevers/remark-git-contributors)
-[![AppVeyor build status](https://img.shields.io/appveyor/ci/vweevers/remark-git-contributors.svg?style=flat-square&label=appveyor)](https://ci.appveyor.com/project/vweevers/remark-git-contributors)
-[![Dependency status](https://img.shields.io/david/vweevers/remark-git-contributors.svg?style=flat-square)](https://david-dm.org/vweevers/remark-git-contributors)
-[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg?style=flat-square)](https://standardjs.com)
+[![npm status](http://img.shields.io/npm/v/remark-git-contributors.svg)](https://www.npmjs.org/package/remark-git-contributors)
+[![node](https://img.shields.io/node/v/remark-git-contributors.svg)](https://www.npmjs.org/package/remark-git-contributors)
+[![Travis build status](https://img.shields.io/travis/vweevers/remark-git-contributors.svg?label=travis)](http://travis-ci.org/vweevers/remark-git-contributors)
+[![AppVeyor build status](https://img.shields.io/appveyor/ci/vweevers/remark-git-contributors.svg?label=appveyor)](https://ci.appveyor.com/project/vweevers/remark-git-contributors)
+[![Dependency status](https://img.shields.io/david/vweevers/remark-git-contributors.svg)](https://david-dm.org/vweevers/remark-git-contributors)
+[![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
 
 ## Table of Contents
 
