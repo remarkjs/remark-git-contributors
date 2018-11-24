@@ -102,9 +102,9 @@ Alternatively, put the metadata in the [`author` or `contributors` fields](https
 
 The options object may contain the following properties:
 
-- `limit`: number. Only render the top `<limit>` contributors, sorted by commit count. By default, all contributors are included.
-- `contributors`: array or module id, see above.
-- `cwd`: working directory from which to resolve `contributors` module (if any). Defaults to [`cwd`](https://github.com/vfile/vfile#vfilecwd) of the markdown file, falling back to `process.cwd()` if it doesn't resolve.
+-   `limit`: number. Only render the top `<limit>` contributors, sorted by commit count. By default, all contributors are included.
+-   `contributors`: array or module id, see above.
+-   `cwd`: working directory from which to resolve `contributors` module (if any). Defaults to [`cwd`](https://github.com/vfile/vfile#vfilecwd) of the markdown file, falling back to `process.cwd()` if it doesn't resolve.
 
 ## Install
 
@@ -115,7 +115,7 @@ With [npm](https://npmjs.org) do:
 ## Contributors
 
 | Name                | GitHub                                       | Social                                                |
-| ------------------- | -------------------------------------------- | ----------------------------------------------------- |
+| :------------------ | :------------------------------------------- | :---------------------------------------------------- |
 | **Vincent Weevers** | [**@vweevers**](https://github.com/vweevers) | [**@vweevers@twitter**](https://twitter.com/vweevers) |
 
 ## License
