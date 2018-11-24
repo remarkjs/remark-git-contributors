@@ -152,11 +152,6 @@ function hasHeading (tree, test) {
   return found
 }
 
-// Supports:
-// - module (path or id)
-// - nested object: { contributors }
-// - array of contributors
-// - object of contributors (key is assumed to be GitHub username)
 function indexContributors (cwd, contributors) {
   const indices = {
     email: {},
@@ -180,26 +175,17 @@ function indexContributors (cwd, contributors) {
       path = resolve.sync(contributors, { basedir: process.cwd() })
     }
 
-    contributors = require(path)
+    const exported = require(path)
+
+    if (Array.isArray(exported)) {
+      contributors = exported
+    } else if (typeof exported === 'object' && exported !== null) {
+      contributors = exported.contributors || exported.default
+    }
   }
 
-  if (typeof contributors === 'object' && !Array.isArray(contributors)) {
-    if (contributors.contributors) {
-      return indexContributors(cwd, contributors.contributors)
-    }
-
-    const obj = contributors
-    contributors = []
-
-    for (let [key, contributor] of Object.entries(obj)) {
-      // TODO: remove this once new level-community is out
-      if (!contributor.github) {
-        // Assume that `key` is GitHub username
-        contributor = Object.assign({}, contributor, { github: key })
-      }
-
-      contributors.push(contributor)
-    }
+  if (!Array.isArray(contributors)) {
+    throw new TypeError('The "contributors" option must be (or resolve to) an array')
   }
 
   for (let contributor of contributors) {
