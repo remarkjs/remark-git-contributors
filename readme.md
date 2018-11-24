@@ -120,4 +120,4 @@ With [npm](https://npmjs.org) do:
 
 ## License
 
-[MIT](http://opensource.org/licenses/MIT) © 2018-present Vincent Weevers
+[MIT](LICENSE.md) © 2018-present Vincent Weevers
