@@ -74,8 +74,8 @@ module.exports = function attacher (opts) {
         .reduce(dedup(['email', 'name', 'github', 'twitter', 'mastodon']), [])
         .sort((a, b) => b.commits - a.commits)
 
-      if (file.stem && file.stem.toLowerCase() === 'readme') {
-        contributors = contributors.slice(0, 10)
+      if (opts.limit && opts.limit > 0) {
+        contributors = contributors.slice(0, opts.limit)
       }
 
       const customHeaders = Object.assign({}, headers)
