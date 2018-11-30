@@ -8,6 +8,9 @@
 [![AppVeyor build status](https://img.shields.io/appveyor/ci/remarkjs/remark-git-contributors.svg?label=appveyor)](https://ci.appveyor.com/project/remarkjs/remark-git-contributors)
 [![Dependency status](https://img.shields.io/david/remarkjs/remark-git-contributors.svg)](https://david-dm.org/remarkjs/remark-git-contributors)
 [![JavaScript Style Guide](https://img.shields.io/badge/code_style-standard-brightgreen.svg)](https://standardjs.com)
+[![Chat](https://img.shields.io/badge/join%20the%20community-on%20spectrum-7b16ff.svg)](https://spectrum.chat/unified/remark)
+[![Sponsors](https://opencollective.com/unified/sponsors/badge.svg)](https://opencollective.com/unified)
+[![Backers](https://opencollective.com/unified/backers/badge.svg)](https://opencollective.com/unified)
 
 ## Table of Contents
 
@@ -112,6 +115,12 @@ The options object may contain the following properties:
 With [npm](https://npmjs.org) do:
 
     npm install remark-git-contributors
+
+## Contribute
+
+See [`contributing.md` in `remarkjs/remark`](https://github.com/remarkjs/remark/blob/master/contributing.md) for ways to get started.
+
+This organisation has a [Code of Conduct](https://github.com/remarkjs/remark/blob/master/code-of-conduct.md).  By interacting with this repository, organisation, or community you agree to abide by its terms.
 
 ## Contributors
 
