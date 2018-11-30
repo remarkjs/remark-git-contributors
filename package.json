@@ -47,7 +47,7 @@
   "engines": {
     "node": ">=6"
   },
-  "repository": "vweevers/remark-git-contributors",
-  "bugs": "https://github.com/vweevers/remark-git-contributors/issues",
-  "homepage": "https://github.com/vweevers/remark-git-contributors"
+  "repository": "remarkjs/remark-git-contributors",
+  "bugs": "https://github.com/remarkjs/remark-git-contributors/issues",
+  "homepage": "https://github.com/remarkjs/remark-git-contributors"
 }
