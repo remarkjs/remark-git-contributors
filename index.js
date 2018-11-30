@@ -9,7 +9,7 @@ const deep = require('deep-dot')
 const path = require('path')
 const fs = require('fs')
 const plugin = require('./package.json').name
-const defaultFormatters = require('./headers') // TODO: rename
+const defaultFormatters = require('./formatters')
 
 const RE = /^contributors$/i
 
