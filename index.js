@@ -4,12 +4,12 @@ const gitContributors = require('git-contributors').GitContributors
 const injectContributors = require('remark-contributors')
 const resolve = require('resolve')
 const heading = require('mdast-util-heading-range')
-const visit = require('unist-util-visit')
 const parseAuthor = require('parse-author')
+const deep = require('deep-dot')
 const path = require('path')
 const fs = require('fs')
 const plugin = require('./package.json').name
-const headers = require('./headers')
+const defaultFormatters = require('./headers') // TODO: rename
 
 const RE = /^contributors$/i
 
@@ -21,8 +21,10 @@ module.exports = function attacher (opts) {
   }
 
   return function transform (root, file, callback) {
-    if (!hasHeading(root, RE)) {
-      return callback()
+    // Skip work if there's no Contributors heading. This is merely
+    // an optimization, because remark-contributors also does this.
+    if (!hasHeading(root, RE) && !opts.appendIfMissing) {
+      return process.nextTick(callback)
     }
 
     const cwd = path.resolve(opts.cwd || file.cwd || '.')
@@ -59,58 +61,72 @@ module.exports = function attacher (opts) {
           return
         }
 
+        let social = null
+
+        if (metadata.twitter) {
+          const handle = metadata.twitter.split(/@|\//).pop().trim()
+
+          if (handle) {
+            social = {
+              url: 'https://twitter.com/' + handle,
+              text: '@' + handle + '@twitter'
+            }
+          } else {
+            file.warn(`invalid twitter handle for ${email}`, null, `${plugin}:valid-twitter`)
+          }
+        } else if (metadata.mastodon) {
+          const arr = metadata.mastodon.split('@').filter(Boolean)
+          const handle = arr[0]
+          const domain = arr[1]
+
+          if (handle && domain) {
+            social = {
+              url: 'https://' + domain + '/@' + handle,
+              text: '@' + handle + '@' + domain
+            }
+          } else {
+            file.warn(`invalid mastodon handle for ${email}`, null, `${plugin}:valid-mastodon`)
+          }
+        } else {
+          file.info(`no social profile for ${email}`, null, `${plugin}:social`)
+        }
+
         return {
           email,
           commits,
           name: metadata.name || name,
           github: metadata.github,
-          twitter: metadata.twitter,
-          mastodon: metadata.mastodon
+          social
         }
       })
 
       contributors = contributors
         .filter(Boolean)
-        .reduce(dedup(['email', 'name', 'github', 'twitter', 'mastodon']), [])
+        .reduce(dedup(['email', 'name', 'github', 'social.url']), [])
         .sort((a, b) => b.commits - a.commits)
 
       if (opts.limit && opts.limit > 0) {
         contributors = contributors.slice(0, opts.limit)
       }
 
-      const customHeaders = Object.assign({}, headers)
+      const formatters = Object.assign({}, defaultFormatters)
 
-      // Remove GitHub column if all cells would be empty
+      // Exclude GitHub column if all cells would be empty
       if (contributors.every(c => !c.github)) {
-        delete customHeaders.github
+        formatters.github = false
       }
 
-      // Remove Social column if all cells would be empty
-      if (contributors.every(c => !c.twitter && !c.mastodon)) {
-        delete customHeaders.social
+      // Exclude Social column if all cells would be empty
+      if (contributors.every(c => !c.social)) {
+        formatters.social = false
       }
 
       injectContributors({
         contributors,
-        headers: customHeaders,
+        formatters,
+        appendIfMissing: opts.appendIfMissing,
         align: 'left'
-      })(root, file)
-
-      // TODO: The "align" option above has no effect until hughsk/remark-contributors#11 lands.
-      // When it does, remove the following hack (as well as the unist-util-visit dependency).
-      visit(root, 'table', function (node, index, parent) {
-        const prev = parent && parent.children[index - 1]
-
-        if (prev && prev.type === 'heading') {
-          const child = prev.children && prev.children[0]
-
-          if (child && child.type === 'text' && RE.test(child.value)) {
-            node.align = new Array(Object.keys(customHeaders).length).fill('left')
-          }
-        }
-      })
-
-      callback()
+      })(root, file, callback)
     })
   }
 }
@@ -129,15 +145,17 @@ function dedup (keys) {
 
   return function (acc, contributor) {
     for (let key of keys) {
-      if (contributor[key]) {
+      const value = deep(contributor, key)
+
+      if (value) {
         const index = map.get(key)
 
-        if (index.has(contributor[key])) {
-          index.get(contributor[key]).commits += contributor.commits
+        if (index.has(value)) {
+          index.get(value).commits += contributor.commits
           return acc
         }
 
-        index.set(contributor[key], contributor)
+        index.set(value, contributor)
       }
     }
 

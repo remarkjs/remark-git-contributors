@@ -14,12 +14,12 @@
     "remark": "remark --use . README.md -o"
   },
   "dependencies": {
+    "deep-dot": "0.0.2",
     "git-contributors": "~0.2.3",
     "mdast-util-heading-range": "~2.1.0",
     "parse-author": "~2.0.0",
-    "remark-contributors": "github:hughsk/remark-contributors#b1703ce",
-    "resolve": "~1.8.1",
-    "unist-util-visit": "~1.4.0"
+    "remark-contributors": "~4.0.0",
+    "resolve": "~1.8.1"
   },
   "devDependencies": {
     "remark": "~10.0.1",
