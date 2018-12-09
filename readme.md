@@ -1,7 +1,6 @@
 # remark-git-contributors
 
 [![Version][version-badge]][version]
-[![Node][node-badge]][node]
 [![Travis][travis-badge]][travis]
 [![AppVeyor][appveyor-badge]][appveyor]
 [![Coverage][coverage-badge]][coverage]
@@ -182,10 +181,6 @@ repository, organisation, or community you agree to abide by its terms.
 [version-badge]: http://img.shields.io/npm/v/remark-git-contributors.svg
 
 [version]: https://www.npmjs.org/package/remark-git-contributors
-
-[node-badge]: https://img.shields.io/node/v/remark-git-contributors.svg
-
-[node]: https://www.npmjs.org/package/remark-git-contributors
 
 [travis-badge]: https://img.shields.io/travis/remarkjs/remark-git-contributors.svg?label=travis
 
