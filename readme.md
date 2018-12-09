@@ -175,7 +175,7 @@ repository, organisation, or community you agree to abide by its terms.
 
 ## License
 
-[MIT][license] © [Vincent Weevers][author]
+[MIT][license] © Vincent Weevers
 
 <!-- Definitions -->
 
@@ -238,5 +238,3 @@ repository, organisation, or community you agree to abide by its terms.
 [coc]: https://github.com/remarkjs/remark/blob/master/code-of-conduct.md
 
 [license]: license
-
-[author]: https://vincentweevers.nl
