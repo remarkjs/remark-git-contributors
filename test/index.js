@@ -142,7 +142,7 @@ test('with a noreply email', function (t) {
   })
 })
 
-test('with a greenkeeper email', function (t) {
+test('ignores greenkeeper email', function (t) {
   const email = 'example@greenkeeper.io'
   const gitUsers = [[TEST_NAME, email]]
 
