@@ -1,9 +1,10 @@
 # remark-git-contributors
 
-[![version][version-badge]][version]
+[![Version][version-badge]][version]
 [![Node][node-badge]][node]
 [![Travis][travis-badge]][travis]
 [![AppVeyor][appveyor-badge]][appveyor]
+[![Coverage][coverage-badge]][coverage]
 [![Dependencies][dependencies-badge]][dependencies]
 [![JavaScript Style Guide][standard-badge]][standard]
 [![Chat][chat-badge]][chat]
@@ -193,6 +194,10 @@ repository, organisation, or community you agree to abide by its terms.
 [appveyor-badge]: https://img.shields.io/appveyor/ci/remarkjs/remark-git-contributors.svg?label=appveyor
 
 [appveyor]: https://ci.appveyor.com/project/remarkjs/remark-git-contributors
+
+[coverage-badge]: https://img.shields.io/codecov/c/github/remarkjs/remark-git-contributors.svg
+
+[coverage]: https://codecov.io/github/remarkjs/remark-git-contributors
 
 [dependencies-badge]: https://img.shields.io/david/remarkjs/remark-git-contributors.svg
 
