@@ -1,6 +1,6 @@
 {
   "name": "remark-git-contributors",
-  "version": "0.3.0",
+  "version": "1.0.0",
   "description": "Asynchronous remark plugin to inject git contributors into a markdown table",
   "license": "MIT",
   "keywords": [
