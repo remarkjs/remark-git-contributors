@@ -36,7 +36,7 @@ module.exports = function attacher (opts) {
     try {
       indices = indexContributors(cwd, opts.contributors)
     } catch (err) {
-      return callback(err)
+      return process.nextTick(callback, err)
     }
 
     indexContributor(indices, pkg.author)
