@@ -38,20 +38,20 @@
   ],
   "dependencies": {
     "deep-dot": "0.0.2",
-    "git-contributors": "~0.2.3",
-    "mdast-util-heading-range": "~2.1.0",
-    "parse-author": "~2.0.0",
-    "remark-contributors": "~4.0.0",
-    "resolve": "~1.8.1"
+    "git-contributors": "^0.2.3",
+    "mdast-util-heading-range": "^2.1.0",
+    "parse-author": "^2.0.0",
+    "remark-contributors": "^4.0.0",
+    "resolve": "^1.8.1"
   },
   "devDependencies": {
     "nyc": "^13.1.0",
-    "remark": "~10.0.1",
+    "remark": "^10.0.1",
     "remark-cli": "^6.0.1",
     "remark-preset-wooorm": "^4.0.0",
-    "standard": "~12.0.1",
-    "tape": "~4.9.0",
-    "tmpgen": "~1.1.1"
+    "standard": "^12.0.1",
+    "tape": "^4.9.0",
+    "tmpgen": "^1.1.1"
   },
   "scripts": {
     "format": "standard --fix && remark *.md -qfo",
