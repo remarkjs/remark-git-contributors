@@ -3,40 +3,6 @@
   "version": "0.3.0",
   "description": "Asynchronous remark plugin to inject git contributors into a markdown table",
   "license": "MIT",
-  "author": {
-    "name": "Vincent Weevers",
-    "email": "mail@vincentweevers.nl",
-    "github": "vweevers",
-    "twitter": "vweevers"
-  },
-  "scripts": {
-    "test": "standard && node test",
-    "remark": "remark --use . README.md -o"
-  },
-  "dependencies": {
-    "deep-dot": "0.0.2",
-    "git-contributors": "~0.2.3",
-    "mdast-util-heading-range": "~2.1.0",
-    "parse-author": "~2.0.0",
-    "remark-contributors": "~4.0.0",
-    "resolve": "~1.8.1"
-  },
-  "devDependencies": {
-    "remark": "~10.0.1",
-    "remark-cli": "~6.0.1",
-    "remark-toc": "~5.1.1",
-    "standard": "~12.0.1",
-    "tape": "~4.9.0",
-    "tmpgen": "~1.1.1"
-  },
-  "remarkConfig": {
-    "plugins": {
-      "remark-toc": {
-        "maxDepth": 2,
-        "tight": true
-      }
-    }
-  },
   "keywords": [
     "contributors",
     "github",
@@ -44,10 +10,65 @@
     "markdown",
     "remark"
   ],
-  "engines": {
-    "node": ">=6"
-  },
   "repository": "remarkjs/remark-git-contributors",
   "bugs": "https://github.com/remarkjs/remark-git-contributors/issues",
-  "homepage": "https://github.com/remarkjs/remark-git-contributors"
+  "author": {
+    "name": "Vincent Weevers",
+    "email": "mail@vincentweevers.nl",
+    "github": "vweevers",
+    "twitter": "vweevers"
+  },
+  "contributors": [
+    {
+      "name": "Vincent Weevers",
+      "email": "mail@vincentweevers.nl",
+      "github": "vweevers",
+      "twitter": "vweevers"
+    },
+    {
+      "name": "Titus Wormer",
+      "email": "tituswormer@gmail.com",
+      "github": "wooorm",
+      "twitter": "wooorm"
+    }
+  ],
+  "files": [
+    "formatters.js",
+    "index.js"
+  ],
+  "dependencies": {
+    "deep-dot": "0.0.2",
+    "git-contributors": "^0.2.3",
+    "mdast-util-heading-range": "^2.1.0",
+    "parse-author": "^2.0.0",
+    "remark-contributors": "^4.0.0",
+    "resolve": "^1.8.1"
+  },
+  "devDependencies": {
+    "nyc": "^13.1.0",
+    "remark": "^10.0.1",
+    "remark-cli": "^6.0.1",
+    "remark-preset-wooorm": "^4.0.0",
+    "standard": "^12.0.1",
+    "tape": "^4.9.0",
+    "tmpgen": "^1.1.1"
+  },
+  "scripts": {
+    "format": "standard --fix && remark *.md -qfo",
+    "test-api": "node test",
+    "test-coverage": "nyc --reporter lcov tape test/index.js",
+    "test": "npm run format && npm run test-coverage"
+  },
+  "nyc": {
+    "check-coverage": true,
+    "lines": 100,
+    "functions": 100,
+    "branches": 100
+  },
+  "remarkConfig": {
+    "plugins": [
+      "preset-wooorm",
+      "."
+    ]
+  }
 }
