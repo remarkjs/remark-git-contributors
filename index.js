@@ -11,6 +11,8 @@ const fs = require('fs')
 const plugin = require('./package.json').name
 const defaultFormatters = require('./formatters')
 
+var noreply = '@users.noreply.github.com'
+
 const RE = /^contributors$/i
 
 module.exports = function attacher (opts) {
@@ -27,9 +29,15 @@ module.exports = function attacher (opts) {
       return process.nextTick(callback)
     }
 
-    const cwd = path.resolve(opts.cwd || file.cwd || '.')
-    const indices = indexContributors(cwd, opts.contributors)
+    const cwd = path.resolve(opts.cwd || file.cwd)
     const pkg = maybePackage(cwd)
+    let indices
+
+    try {
+      indices = indexContributors(cwd, opts.contributors)
+    } catch (err) {
+      return callback(err)
+    }
 
     indexContributor(indices, pkg.author)
 
@@ -38,7 +46,9 @@ module.exports = function attacher (opts) {
     }
 
     gitContributors.list(cwd, function (err, contributors) {
-      if (err) return callback(err)
+      if (err) {
+        return callback(new Error('Could not get Git contributors: ' + err.message))
+      }
 
       contributors = contributors.map(({ name, email, commits }) => {
         if (!email) {
@@ -49,8 +59,8 @@ module.exports = function attacher (opts) {
         const metadata = indices.email[email] ||
           indices.name[name.toLowerCase()] || {}
 
-        if (email.endsWith('@users.noreply.github.com')) {
-          metadata.github = email.slice(0, -25).replace(/^[\d]+\+/, '')
+        if (email.endsWith(noreply)) {
+          metadata.github = email.slice(0, -noreply.length).replace(/^[\d]+\+/, '')
           indexValue(indices.github, metadata.github, metadata)
         }
 
@@ -133,8 +143,8 @@ module.exports = function attacher (opts) {
 
 function maybePackage (cwd) {
   try {
-    const json = fs.readFileSync(path.join(cwd, 'package.json'), 'utf8')
-    return JSON.parse(json)
+    const buf = fs.readFileSync(path.join(cwd, 'package.json'))
+    return JSON.parse(buf)
   } catch (err) {
     return {}
   }
@@ -191,6 +201,7 @@ function indexContributors (cwd, contributors) {
     try {
       path = resolve.sync(contributors, { basedir: cwd })
     } catch (err) {
+      /* istanbul ignore if - Hard to test. */
       if (err.code !== 'MODULE_NOT_FOUND') throw err
 
       // Fallback to process.cwd()

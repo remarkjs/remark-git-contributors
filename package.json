@@ -45,6 +45,7 @@
     "resolve": "~1.8.1"
   },
   "devDependencies": {
+    "nyc": "^13.1.0",
     "remark": "~10.0.1",
     "remark-cli": "^6.0.1",
     "remark-preset-wooorm": "^4.0.0",
@@ -53,9 +54,16 @@
     "tmpgen": "~1.1.1"
   },
   "scripts": {
-    "format": "standard && remark *.md -qfo",
+    "format": "standard --fix && remark *.md -qfo",
     "test-api": "node test",
-    "test": "npm run format && npm run test-api"
+    "test-coverage": "nyc --reporter lcov tape test/index.js",
+    "test": "npm run format && npm run test-coverage"
+  },
+  "nyc": {
+    "check-coverage": true,
+    "lines": 100,
+    "functions": 100,
+    "branches": 100
   },
   "remarkConfig": {
     "plugins": [

@@ -11,17 +11,18 @@ exports.commits = {
 exports.social = {
   label: 'Social',
   format: function (value, key) {
-    if (value) {
-      return {
-        type: 'link',
-        url: value.url,
-        children: [{
-          type: 'strong',
-          children: [{ type: 'text', value: value.text }]
-        }]
-      }
-    } else {
+    /* istanbul ignore if - shouldn’t happen, but let’s keep it here just to be sure. */
+    if (!value) {
       return ''
+    }
+
+    return {
+      type: 'link',
+      url: value.url,
+      children: [{
+        type: 'strong',
+        children: [{ type: 'text', value: value.text }]
+      }]
     }
   }
 }
