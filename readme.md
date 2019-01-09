@@ -131,6 +131,11 @@ For example:
 }
 ```
 
+If you’re experiencing people showing up multiple times from the Git history,
+for example because they switched email addresses while contributing to the
+project, or if their name or email are wrong, you can “merge” and fix
+contributors in Git by using a [`.mailmap` file][mailmap].
+
 ## Supported Properties
 
 *   `name`: overrides the name stored in git commits
@@ -225,6 +230,8 @@ repository, organisation, or community you agree to abide by its terms.
 [level-community]: https://www.npmjs.com/package/level-community
 
 [fields]: https://docs.npmjs.com/files/package.json#people-fields-author-contributors
+
+[mailmap]: https://git-scm.com/docs/git-shortlog#_mapping_authors
 
 [cwd]: https://github.com/vfile/vfile#vfilecwd
 
