@@ -47,6 +47,12 @@ module.exports = function attacher (opts) {
 
     gitContributors.list(cwd, function (err, contributors) {
       if (err) {
+        if (/does not have any commits yet/.test(err)) {
+          file.warn('could not get Git contributors as there are no commits yet', null, `${plugin}:no-commits`)
+          callback()
+          return
+        }
+
         return callback(new Error('Could not get Git contributors: ' + err.message))
       }
 

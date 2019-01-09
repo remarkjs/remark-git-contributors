@@ -249,12 +249,24 @@ test('duplicate Git users and contributors', function (t) {
   })
 })
 
+test('no Git', function (t) {
+  const gitUsers = []
+
+  run('00', { skipInit: true, gitUsers }, ({ err }) => {
+    t.ok(/^Error: Could not get Git contributors/.test(err))
+    t.end()
+  })
+})
+
 test('no Git users or contributors', function (t) {
   const gitUsers = []
   const contributors = []
 
-  run('00', { gitUsers, options: { contributors } }, ({ err }) => {
-    t.ok(/^Error: Could not get Git contributors/.test(err))
+  run('00', { gitUsers, options: { contributors } }, ({ file }) => {
+    t.deepEqual(
+      file.messages.map(String),
+      ['1:1: could not get Git contributors as there are no commits yet']
+    )
     t.end()
   })
 })
@@ -295,7 +307,9 @@ function run (fixture, opts, test) {
   const gitUsers = opts.gitUsers || [[TEST_NAME, TEST_EMAIL]]
   const { pkgAuthor, pkgContributors, options } = opts
 
-  execFileSync('git', ['init', '.'], { cwd, stdio: 'ignore' })
+  if (!opts.skipInit) {
+    execFileSync('git', ['init', '.'], { cwd, stdio: 'ignore' })
+  }
 
   if (pkgAuthor || pkgContributors) {
     fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify({
