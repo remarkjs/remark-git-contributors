@@ -6,49 +6,50 @@
 [![Coverage][coverage-badge]][coverage]
 [![Dependencies][dependencies-badge]][dependencies]
 [![JavaScript Style Guide][standard-badge]][standard]
-[![Chat][chat-badge]][chat]
+[![Downloads][downloads-badge]][downloads]
+[![Size][size-badge]][size]
 [![Sponsors][sponsors-badge]][collective]
 [![Backers][backers-badge]][collective]
+[![Chat][chat-badge]][chat]
 
-Asynchronous [`remark`][remark] plugin to inject Git contributors into a
-markdown table.
+[**remark**][remark] plugin to inject Git contributors into a Markdown table.
 Collects contributors from Git history, deduplicates them, augments it with
-metadata found in options, a module or `package.json` and calls
-[`remark-contributors`][contributors] to render the markdown table.
+metadata found in options, a module, or `package.json` and calls
+[`remark-contributors`][contributors] to render the Markdown table.
 
 ## Table of Contents
 
-*   [Installation](#installation)
-*   [Usage](#usage)
-    *   [Injection](#injection)
+*   [Install](#install)
+*   [Use](#use)
+    *   [Inject](#inject)
     *   [Metadata](#metadata)
 *   [Supported Properties](#supported-properties)
 *   [API](#api)
-    *   [contributors(\[options\])](#contributorsoptions)
+    *   [remark().use(gitContributors\[, options\])](#remarkusegitcontributors-options)
 *   [Contribute](#contribute)
 *   [Contributors](#contributors)
 *   [License](#license)
 
-## Installation
+## Install
 
 [npm][]:
 
-```bash
+```shsh
 npm install remark-git-contributors
 ```
 
-## Usage
+## Use
 
-With [`remark-cli`][cli], modifying a markdown file in place (`-o`):
+With [`remark-cli`][cli], modifying a Markdown file in place (`-o`):
 
 ```sh
 remark --use remark-git-contributors readme.md -o
 ```
 
-### Injection
+### Inject
 
 Injecting a contributors section is opt-in: if a `Contributors` heading is not
-found in the markdown (case- and level-insensitive), the plugin is a noop,
+found in the Markdown (case- and level-insensitive), the plugin is a noop,
 unless [`appendIfMissing`][api] is set.
 
 If the Git repository has many contributors, it is recommended to have them
@@ -72,7 +73,7 @@ To augment user metadata, configure the plugin in your `package.json`:
     [
       "remark-git-contributors",
       {
-        "contributors": /* ... */
+        "contributors": /* … */
       }
     ]
   ]
@@ -81,8 +82,9 @@ To augment user metadata, configure the plugin in your `package.json`:
 
 Where `contributors` is either:
 
-*   An array in the form of `[{ email, name, .. }, ..]`;
-*   A module id or path to a file that exports `contributors` or `{ contributors }`.
+*   An array in the form of `[{ email, name, … }, … ]`;
+*   A module id or path to a file that exports `contributors` or
+    `{ contributors }`.
 
 Note that `remark-git-contributors` excludes people that are not in Git history.
 This way the `contributors` metadata can be reused in multiple projects.
@@ -145,30 +147,45 @@ contributors in Git by using a [`.mailmap` file][mailmap].
 
 ## API
 
-### `contributors([options])`
+### `remark().use(gitContributors[, options])`
 
-The options object may contain the following properties:
+Inject Git contributors into a Markdown table.
 
-*   `limit`: number.
-    Only render the top `<limit>` contributors, sorted by commit count.
-    By default, all contributors are included.
-*   `contributors`: array or module id.
-    See above.
-*   `cwd`: working directory from which to resolve `contributors` module (if
-    any).
-    Defaults to [`cwd`][cwd] of the file, falling back to `process.cwd()` if
-    it doesn’t resolve.
-*   `appendIfMissing`: boolean.
-    Inject Contributors section if there is none.
-    Default is `false`.
+##### `options`
+
+###### `options.limit`
+
+Limit the rendered contributors (`number`, default: `0`).
+A limit of `0` (or lower) includes all contributors.
+If `limit` is given, only the top `<limit>` contributors, sorted by commit
+count, are rendered.
+
+###### `options.contributors`
+
+Contributor metadata (`Array` or `string`, default: `[]`).
+Can be a list of contributor objects (see above).
+Can be a module id, that resolves either to a list of contributors or to an
+object with a `contributors` or `default` field that provides the list of
+contributors.
+
+###### `options.cwd`
+
+Working directory from which to resolve a `contributors` module, if any
+(`string`, default: [`file.cwd`][cwd] or `process.cwd()`).
+
+###### `options.appendIfMissing`
+
+Inject Contributors section if there is none (`boolean`, default: `false`).
 
 ## Contribute
 
-See [`contributing.md` in `remarkjs/remark`][contributing] for ways to get
-started.
+See [`contributing.md`][contributing] in [`remarkjs/.github`][health] for ways
+to get started.
+See [`support.md`][support] for ways to get help.
 
-This organisation has a [Code of Conduct][coc].  By interacting with this
-repository, organisation, or community you agree to abide by its terms.
+This project has a [Code of Conduct][coc].
+By interacting with this repository, organisation, or community you agree to
+abide by its terms.
 
 ## Contributors
 
@@ -187,7 +204,7 @@ repository, organisation, or community you agree to abide by its terms.
 
 [version]: https://www.npmjs.org/package/remark-git-contributors
 
-[travis-badge]: https://img.shields.io/travis/remarkjs/remark-git-contributors.svg?label=travis
+[travis-badge]: https://img.shields.io/travis/remarkjs/remark-git-contributors/master.svg?label=travis
 
 [travis]: https://travis-ci.org/remarkjs/remark-git-contributors
 
@@ -207,9 +224,13 @@ repository, organisation, or community you agree to abide by its terms.
 
 [standard]: https://standardjs.com
 
-[chat-badge]: https://img.shields.io/badge/join%20the%20community-on%20spectrum-7b16ff.svg
+[downloads-badge]: https://img.shields.io/npm/dm/remark-git-contributors.svg
 
-[chat]: https://spectrum.chat/unified/remark
+[downloads]: https://www.npmjs.com/package/remark-git-contributors
+
+[size-badge]: https://img.shields.io/bundlephobia/minzip/remark-git-contributors.svg
+
+[size]: https://bundlephobia.com/result?p=remark-git-contributors
 
 [sponsors-badge]: https://opencollective.com/unified/sponsors/badge.svg
 
@@ -217,11 +238,25 @@ repository, organisation, or community you agree to abide by its terms.
 
 [collective]: https://opencollective.com/unified
 
+[chat-badge]: https://img.shields.io/badge/join%20the%20community-on%20spectrum-7b16ff.svg
+
+[chat]: https://spectrum.chat/unified/remark
+
+[npm]: https://docs.npmjs.com/cli/install
+
+[health]: https://github.com/remarkjs/.github
+
+[contributing]: https://github.com/remarkjs/.github/blob/master/contributing.md
+
+[support]: https://github.com/remarkjs/.github/blob/master/support.md
+
+[coc]: https://github.com/remarkjs/.github/blob/master/code-of-conduct.md
+
+[license]: license
+
 [remark]: https://github.com/remarkjs/remark
 
 [contributors]: https://github.com/remarkjs/remark-contributors
-
-[npm]: https://docs.npmjs.com/cli/install
 
 [cli]: https://github.com/remarkjs/remark/tree/master/packages/remark-cli
 
@@ -234,9 +269,3 @@ repository, organisation, or community you agree to abide by its terms.
 [mailmap]: https://git-scm.com/docs/git-shortlog#_mapping_authors
 
 [cwd]: https://github.com/vfile/vfile#vfilecwd
-
-[contributing]: https://github.com/remarkjs/remark/blob/master/contributing.md
-
-[coc]: https://github.com/remarkjs/remark/blob/master/code-of-conduct.md
-
-[license]: license
