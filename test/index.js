@@ -323,6 +323,7 @@ function run (fixture, opts, test) {
   gitUsers.forEach(function ([name, email], index) {
     execFileSync('git', ['config', 'user.name', name], { cwd, stdio: 'ignore' })
     execFileSync('git', ['config', 'user.email', email], { cwd, stdio: 'ignore' })
+    execFileSync('git', ['config', 'commit.gpgsign', 'false'], { cwd, stdio: 'ignore' })
 
     if (index === 0) {
       fs.writeFileSync(path.join(cwd, 'index.js'), main)
