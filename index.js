@@ -13,7 +13,7 @@ const defaultFormatters = require('./formatters')
 
 var noreply = '@users.noreply.github.com'
 
-const RE = /^contributors$/i
+const headingExpression = /^contributors$/i
 
 module.exports = function attacher (opts) {
   if (typeof opts === 'string') {
@@ -25,7 +25,7 @@ module.exports = function attacher (opts) {
   return function transform (root, file, callback) {
     // Skip work if there's no Contributors heading. This is merely
     // an optimization, because remark-contributors also does this.
-    if (!hasHeading(root, RE) && !opts.appendIfMissing) {
+    if (!hasHeading(root, headingExpression) && !opts.appendIfMissing) {
       return process.nextTick(callback)
     }
 

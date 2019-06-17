@@ -8,16 +8,16 @@ const tmp = require('tmpgen')('remark-git-contributors/*')
 const execFileSync = require('child_process').execFileSync
 const plugin = require('..')
 
-const TEST_NAME = 'test'
-const TEST_EMAIL = 'test@localhost'
-const TEST_URL = 'https://localhost'
+const testName = 'test'
+const testEmail = 'test@localhost'
+const testUrl = 'https://localhost'
 
 test('basic', function (t) {
   run('00', {}, ({ file, actual, expected }) => {
     t.is(actual, expected)
     t.deepEqual(
       file.messages.map(String),
-      ['1:1: no social profile for ' + TEST_EMAIL]
+      ['1:1: no social profile for ' + testEmail]
     )
     t.end()
   })
@@ -28,7 +28,7 @@ test('with metadata as strings', function (t) {
     t.is(actual, expected)
     t.deepEqual(
       file.messages.map(String),
-      ['1:1: no social profile for ' + TEST_EMAIL]
+      ['1:1: no social profile for ' + testEmail]
     )
     t.end()
   })
@@ -39,7 +39,7 @@ test('with duplicate metadata', function (t) {
     t.is(actual, expected)
     t.deepEqual(
       file.messages.map(String),
-      ['1:1: no social profile for ' + TEST_EMAIL]
+      ['1:1: no social profile for ' + testEmail]
     )
     t.end()
   })
@@ -47,7 +47,7 @@ test('with duplicate metadata', function (t) {
 
 test('with metadata', function (t) {
   const contributors = [
-    { email: TEST_EMAIL, github: 'test', twitter: 'test' }
+    { email: testEmail, github: 'test', twitter: 'test' }
   ]
 
   run('01', { options: { contributors } }, ({ file, actual, expected }) => {
@@ -122,7 +122,7 @@ test('without heading, with `appendIfMissing`', function (t) {
     t.is(actual, expected)
     t.deepEqual(
       file.messages.map(String),
-      ['1:1: no social profile for ' + TEST_EMAIL]
+      ['1:1: no social profile for ' + testEmail]
     )
     t.end()
   })
@@ -130,7 +130,7 @@ test('without heading, with `appendIfMissing`', function (t) {
 
 test('with a noreply email', function (t) {
   const email = '944406+wooorm@users.noreply.github.com'
-  const gitUsers = [[TEST_NAME, email]]
+  const gitUsers = [[testName, email]]
 
   run('04', { gitUsers }, ({ file, actual, expected }) => {
     t.is(actual, expected)
@@ -144,7 +144,7 @@ test('with a noreply email', function (t) {
 
 test('ignores greenkeeper email', function (t) {
   const email = 'example@greenkeeper.io'
-  const gitUsers = [[TEST_NAME, email]]
+  const gitUsers = [[testName, email]]
 
   run('00', { gitUsers }, function ({ err }) {
     t.ok(/^Error: Missing required `contributors` in settings/.test(err))
@@ -153,20 +153,20 @@ test('ignores greenkeeper email', function (t) {
 })
 
 test('with invalid twitter', function (t) {
-  const contributors = [{ email: TEST_EMAIL, twitter: '@' }]
+  const contributors = [{ email: testEmail, twitter: '@' }]
 
   run('00', { options: { contributors } }, ({ file, actual, expected }) => {
     t.is(actual, expected)
     t.deepEqual(
       file.messages.map(String),
-      ['1:1: invalid twitter handle for ' + TEST_EMAIL]
+      ['1:1: invalid twitter handle for ' + testEmail]
     )
     t.end()
   })
 })
 
 test('with valid mastodon', function (t) {
-  const contributors = [{ email: TEST_EMAIL, mastodon: '@foo@bar.com' }]
+  const contributors = [{ email: testEmail, mastodon: '@foo@bar.com' }]
 
   run('05', { options: { contributors } }, ({ file, actual, expected }) => {
     t.is(actual, expected)
@@ -176,20 +176,20 @@ test('with valid mastodon', function (t) {
 })
 
 test('with invalid mastodon', function (t) {
-  const contributors = [{ email: TEST_EMAIL, mastodon: '@foo' }]
+  const contributors = [{ email: testEmail, mastodon: '@foo' }]
 
   run('00', { options: { contributors } }, ({ file, actual, expected }) => {
     t.is(actual, expected)
     t.deepEqual(
       file.messages.map(String),
-      ['1:1: invalid mastodon handle for ' + TEST_EMAIL]
+      ['1:1: invalid mastodon handle for ' + testEmail]
     )
     t.end()
   })
 })
 
 test('with empty email', function (t) {
-  const gitUsers = [[TEST_NAME, '<>']]
+  const gitUsers = [[testName, '<>']]
 
   run('00', { gitUsers }, ({ err }) => {
     t.ok(/^Error: Missing required `contributors` in settings/.test(err))
@@ -273,9 +273,9 @@ test('no Git users or contributors', function (t) {
 
 test('package.json author', function (t) {
   const pkgAuthor = {
-    name: TEST_NAME,
-    email: TEST_EMAIL,
-    url: TEST_URL,
+    name: testName,
+    email: testEmail,
+    url: testUrl,
     github: 'test'
   }
 
@@ -287,9 +287,9 @@ test('package.json author', function (t) {
 
 test('package.json contributors', function (t) {
   const pkgContributors = [{
-    name: TEST_NAME,
-    email: TEST_EMAIL,
-    url: TEST_URL,
+    name: testName,
+    email: testEmail,
+    url: testUrl,
     github: 'test'
   }]
 
@@ -304,7 +304,7 @@ function run (fixture, opts, test) {
   const inputFile = path.join(__dirname, 'fixture', fixture + '-input.md')
   const outputFile = path.join(__dirname, 'fixture', fixture + '-output.md')
   const main = opts.main ? fs.readFileSync(path.join(__dirname, 'fixture', opts.main), 'utf8') : ''
-  const gitUsers = opts.gitUsers || [[TEST_NAME, TEST_EMAIL]]
+  const gitUsers = opts.gitUsers || [[testName, testEmail]]
   const { pkgAuthor, pkgContributors, options } = opts
 
   if (!opts.skipInit) {
