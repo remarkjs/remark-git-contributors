@@ -1,14 +1,17 @@
 {
   "name": "remark-git-contributors",
   "version": "1.0.0",
-  "description": "Asynchronous remark plugin to inject git contributors into a markdown table",
+  "description": "remark plugin to inject Git contributors into a Markdown table",
   "license": "MIT",
   "keywords": [
+    "unified",
+    "remark",
+    "plugin",
+    "mdast",
+    "markdown",
     "contributors",
     "github",
-    "inject",
-    "markdown",
-    "remark"
+    "inject"
   ],
   "repository": "remarkjs/remark-git-contributors",
   "bugs": "https://github.com/remarkjs/remark-git-contributors/issues",
