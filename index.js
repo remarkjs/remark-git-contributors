@@ -48,7 +48,7 @@ module.exports = function attacher (opts) {
     gitContributors.list(cwd, function (err, contributors) {
       if (err) {
         if (/does not have any commits yet/.test(err)) {
-          file.warn('could not get Git contributors as there are no commits yet', null, `${plugin}:no-commits`)
+          file.message('could not get Git contributors as there are no commits yet', null, `${plugin}:no-commits`)
           callback()
           return
         }
@@ -58,7 +58,7 @@ module.exports = function attacher (opts) {
 
       contributors = contributors.map(({ name, email, commits }) => {
         if (!email) {
-          file.warn(`no git email for ${name}`, null, `${plugin}:require-git-email`)
+          file.message(`no git email for ${name}`, null, `${plugin}:require-git-email`)
           return
         }
 
@@ -88,7 +88,7 @@ module.exports = function attacher (opts) {
               text: '@' + handle + '@twitter'
             }
           } else {
-            file.warn(`invalid twitter handle for ${email}`, null, `${plugin}:valid-twitter`)
+            file.message(`invalid twitter handle for ${email}`, null, `${plugin}:valid-twitter`)
           }
         } else if (metadata.mastodon) {
           const arr = metadata.mastodon.split('@').filter(Boolean)
@@ -101,7 +101,7 @@ module.exports = function attacher (opts) {
               text: '@' + handle + '@' + domain
             }
           } else {
-            file.warn(`invalid mastodon handle for ${email}`, null, `${plugin}:valid-mastodon`)
+            file.message(`invalid mastodon handle for ${email}`, null, `${plugin}:valid-mastodon`)
           }
         } else {
           file.info(`no social profile for ${email}`, null, `${plugin}:social`)
