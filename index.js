@@ -1,6 +1,6 @@
 'use strict'
 
-const gitContributors = require('git-contributors').GitContributors
+const gitContributors = require('contributors-from-git')
 const injectContributors = require('remark-contributors')
 const resolve = require('resolve')
 const heading = require('mdast-util-heading-range')
@@ -45,7 +45,7 @@ module.exports = function attacher (opts) {
       pkg.contributors.forEach(indexContributor.bind(null, indices))
     }
 
-    gitContributors.list(cwd, function (err, contributors) {
+    gitContributors(cwd, function (err, contributors) {
       if (err) {
         if (/does not have any commits yet/.test(err)) {
           file.message('could not get Git contributors as there are no commits yet', null, `${plugin}:no-commits`)

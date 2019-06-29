@@ -40,8 +40,8 @@
     "index.js"
   ],
   "dependencies": {
+    "contributors-from-git": "^1.0.0",
     "deep-dot": "0.0.2",
-    "git-contributors": "^0.2.3",
     "mdast-util-heading-range": "^2.1.0",
     "parse-author": "^2.0.0",
     "remark-contributors": "^4.0.0",
