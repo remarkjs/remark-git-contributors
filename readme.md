@@ -25,7 +25,7 @@ metadata found in options, a module, or `package.json` and calls
     *   [Metadata](#metadata)
 *   [Supported Properties](#supported-properties)
 *   [API](#api)
-    *   [remark().use(gitContributors\[, options\])](#remarkusegitcontributors-options)
+    *   [`remark().use(gitContributors[, options])`](#remarkusegitcontributors-options)
 *   [Contribute](#contribute)
 *   [Contributors](#contributors)
 *   [License](#license)

@@ -160,7 +160,7 @@ function dedup (keys) {
   const map = new Map(keys.map(key => [key, new Map()]))
 
   return function (acc, contributor) {
-    for (let key of keys) {
+    for (const key of keys) {
       const value = deep(contributor, key)
 
       if (value) {
@@ -227,7 +227,7 @@ function indexContributors (cwd, contributors) {
     throw new TypeError('The "contributors" option must be (or resolve to) an array')
   }
 
-  for (let contributor of contributors) {
+  for (const contributor of contributors) {
     indexContributor(indices, contributor)
   }
 
@@ -243,7 +243,7 @@ function indexContributor (indices, contributor) {
 
   const emails = (contributor.emails || []).concat(contributor.email || [])
 
-  for (let email of emails) {
+  for (const email of emails) {
     indexValue(indices.email, email, contributor)
   }
 
