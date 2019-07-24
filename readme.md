@@ -26,6 +26,7 @@ metadata found in options, a module, or `package.json` and calls
 *   [Supported Properties](#supported-properties)
 *   [API](#api)
     *   [`remark().use(gitContributors[, options])`](#remarkusegitcontributors-options)
+*   [Security](#security)
 *   [Contribute](#contribute)
 *   [Contributors](#contributors)
 *   [License](#license)
@@ -177,6 +178,23 @@ Working directory from which to resolve a `contributors` module, if any
 
 Inject Contributors section if there is none (`boolean`, default: `false`).
 
+## Security
+
+`options.contributors` (or `contributors` in `package.json`) and `author` from
+`package.json` are used and injected into the tree.
+`git log` also runs in the current working directory.
+This could open you up to a [cross-site scripting (XSS)][xss] attack if you pass
+user provided content in or store user provided content in `package.json` or
+Git.
+
+This may become a problem if the Markdown later transformed to
+[**rehype**][rehype] ([**hast**][hast]) or opened in an unsafe Markdown viewer.
+
+If `contributors` is a string, it is handled as a module identifier and
+loaded with `require`.
+This could also be very dangerous if an attacker was able to inject code in
+that package.
+
 ## Contribute
 
 See [`contributing.md`][contributing] in [`remarkjs/.github`][health] for ways
@@ -269,3 +287,9 @@ abide by its terms.
 [mailmap]: https://git-scm.com/docs/git-shortlog#_mapping_authors
 
 [cwd]: https://github.com/vfile/vfile#vfilecwd
+
+[xss]: https://en.wikipedia.org/wiki/Cross-site_scripting
+
+[rehype]: https://github.com/rehypejs/rehype
+
+[hast]: https://github.com/syntax-tree/hast
