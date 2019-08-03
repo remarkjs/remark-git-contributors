@@ -180,6 +180,10 @@ Inject Contributors section if there is none (`boolean`, default: `false`).
 
 ## Security
 
+`remark-git-contributors` is typically used in a trusted environment.
+This section explains potential attack vectors and how to mitigate them if the
+environment is not (fully) trusted.
+
 `options.contributors` (or `contributors` in `package.json`) and `author` from
 `package.json` are used and injected into the tree.
 `git log` also runs in the current working directory.
