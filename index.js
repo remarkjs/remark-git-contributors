@@ -119,7 +119,7 @@ module.exports = function attacher (opts) {
       contributors = contributors
         .filter(Boolean)
         .reduce(dedup(['email', 'name', 'github', 'social.url']), [])
-        .sort((a, b) => b.commits - a.commits)
+        .sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name))
 
       if (opts.limit && opts.limit > 0) {
         contributors = contributors.slice(0, opts.limit)

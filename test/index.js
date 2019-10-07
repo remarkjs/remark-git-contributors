@@ -299,6 +299,21 @@ test('package.json contributors', function (t) {
   })
 })
 
+test('sorts authors with equal commit count by name', function (t) {
+  const gitUsers = [
+    ['y', 'y@test'],
+    ['a', 'a@test'],
+    ['B', 'b@test'],
+    ['z', 'z@test'],
+    ['z', 'z@test']
+  ]
+
+  run('10', { gitUsers }, ({ actual, expected }) => {
+    t.is(actual, expected)
+    t.end()
+  })
+})
+
 function run (fixture, opts, test) {
   const cwd = tmp()
   const inputFile = path.join(__dirname, 'fixture', fixture + '-input.md')
