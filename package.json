@@ -52,7 +52,7 @@
     "remark": "^11.0.0",
     "remark-cli": "^7.0.0",
     "remark-preset-wooorm": "^6.0.0",
-    "standard": "^13.0.0",
+    "standard": "^14.0.0",
     "tape": "^4.0.0",
     "tmpgen": "^1.0.0"
   },
