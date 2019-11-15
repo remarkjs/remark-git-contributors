@@ -15,6 +15,10 @@
   ],
   "repository": "remarkjs/remark-git-contributors",
   "bugs": "https://github.com/remarkjs/remark-git-contributors/issues",
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/unified"
+  },
   "author": {
     "name": "Vincent Weevers",
     "email": "mail@vincentweevers.nl",
