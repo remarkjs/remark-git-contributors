@@ -3,6 +3,7 @@
 const test = require('tape')
 const fs = require('fs')
 const path = require('path')
+const vfile = require('to-vfile')
 const remark = require('remark')
 const tmp = require('tmpgen')('remark-git-contributors/*')
 const execFileSync = require('child_process').execFileSync
@@ -16,8 +17,8 @@ test('basic', function (t) {
   run('00', {}, ({ file, actual, expected }) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map(String),
-      ['1:1: no social profile for ' + testEmail]
+      file.messages.map(d => d.reason),
+      ['no social profile for ' + testEmail]
     )
     t.end()
   })
@@ -27,8 +28,8 @@ test('with metadata as strings', function (t) {
   run('00', { main: 'contributors-string.js', options: '.' }, ({ file, actual, expected }) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map(String),
-      ['1:1: no social profile for ' + testEmail]
+      file.messages.map(d => d.reason),
+      ['no social profile for ' + testEmail]
     )
     t.end()
   })
@@ -38,8 +39,8 @@ test('with duplicate metadata', function (t) {
   run('00', { main: 'contributors-duplicates.js', options: '.' }, ({ file, actual, expected }) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map(String),
-      ['1:1: no social profile for ' + testEmail]
+      file.messages.map(d => d.reason),
+      ['no social profile for ' + testEmail]
     )
     t.end()
   })
@@ -52,7 +53,7 @@ test('with metadata', function (t) {
 
   run('01', { options: { contributors } }, ({ file, actual, expected }) => {
     t.is(actual, expected)
-    t.deepEqual(file.messages.map(String), [])
+    t.deepEqual(file.messages.map(d => d.reason), [])
     t.end()
   })
 })
@@ -60,7 +61,7 @@ test('with metadata', function (t) {
 test('with metadata from module (main export)', function (t) {
   run('01', { main: 'contributors-main.js', options: '.' }, ({ file, actual, expected }) => {
     t.is(actual, expected)
-    t.deepEqual(file.messages.map(String), [])
+    t.deepEqual(file.messages.map(d => d.reason), [])
     t.end()
   })
 })
@@ -68,7 +69,7 @@ test('with metadata from module (main export)', function (t) {
 test('with metadata from module (named export)', function (t) {
   run('01', { main: 'contributors-named.js', options: '.' }, ({ file, actual, expected }) => {
     t.is(actual, expected)
-    t.deepEqual(file.messages.map(String), [])
+    t.deepEqual(file.messages.map(d => d.reason), [])
     t.end()
   })
 })
@@ -104,7 +105,7 @@ test('with an invalid contributors setting', function (t) {
 test('with metadata from module (default export)', function (t) {
   run('01', { main: 'contributors-default.js', options: '.' }, ({ file, actual, expected }) => {
     t.is(actual, expected)
-    t.deepEqual(file.messages.map(String), [])
+    t.deepEqual(file.messages.map(d => d.reason), [])
     t.end()
   })
 })
@@ -112,7 +113,7 @@ test('with metadata from module (default export)', function (t) {
 test('without heading', function (t) {
   run('02', { }, ({ file, actual, expected }) => {
     t.is(actual, expected)
-    t.deepEqual(file.messages.map(String), [])
+    t.deepEqual(file.messages.map(d => d.reason), [])
     t.end()
   })
 })
@@ -121,8 +122,8 @@ test('without heading, with `appendIfMissing`', function (t) {
   run('03', { options: { appendIfMissing: true } }, ({ file, actual, expected }) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map(String),
-      ['1:1: no social profile for ' + testEmail]
+      file.messages.map(d => d.reason),
+      ['no social profile for ' + testEmail]
     )
     t.end()
   })
@@ -135,8 +136,8 @@ test('with a noreply email', function (t) {
   run('04', { gitUsers }, ({ file, actual, expected }) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map(String),
-      ['1:1: no social profile for ' + email]
+      file.messages.map(d => d.reason),
+      ['no social profile for ' + email]
     )
     t.end()
   })
@@ -158,8 +159,8 @@ test('with invalid twitter', function (t) {
   run('00', { options: { contributors } }, ({ file, actual, expected }) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map(String),
-      ['1:1: invalid twitter handle for ' + testEmail]
+      file.messages.map(d => d.reason),
+      ['invalid twitter handle for ' + testEmail]
     )
     t.end()
   })
@@ -170,7 +171,7 @@ test('with valid mastodon', function (t) {
 
   run('05', { options: { contributors } }, ({ file, actual, expected }) => {
     t.is(actual, expected)
-    t.deepEqual(file.messages.map(String), [])
+    t.deepEqual(file.messages.map(d => d.reason), [])
     t.end()
   })
 })
@@ -181,8 +182,8 @@ test('with invalid mastodon', function (t) {
   run('00', { options: { contributors } }, ({ file, actual, expected }) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map(String),
-      ['1:1: invalid mastodon handle for ' + testEmail]
+      file.messages.map(d => d.reason),
+      ['invalid mastodon handle for ' + testEmail]
     )
     t.end()
   })
@@ -264,8 +265,8 @@ test('no Git users or contributors', function (t) {
 
   run('00', { gitUsers, options: { contributors } }, ({ file }) => {
     t.deepEqual(
-      file.messages.map(String),
-      ['1:1: could not get Git contributors as there are no commits yet']
+      file.messages.map(d => d.reason),
+      ['could not get Git contributors as there are no commits yet']
     )
     t.end()
   })
@@ -299,6 +300,13 @@ test('package.json contributors', function (t) {
   })
 })
 
+test('broken package.json', function (t) {
+  run('00', { pkgBroken: true }, ({ err, cwd, file, actual, expected }) => {
+    t.ok(/^SyntaxError: Unexpected token/.test(err))
+    t.end()
+  })
+})
+
 test('sorts authors with equal commit count by name', function (t) {
   const gitUsers = [
     ['y', 'y@test'],
@@ -320,19 +328,25 @@ function run (fixture, opts, test) {
   const outputFile = path.join(__dirname, 'fixture', fixture + '-output.md')
   const main = opts.main ? fs.readFileSync(path.join(__dirname, 'fixture', opts.main), 'utf8') : ''
   const gitUsers = opts.gitUsers || [[testName, testEmail]]
-  const { pkgAuthor, pkgContributors, options } = opts
+  const { pkgAuthor, pkgContributors, pkgBroken, options } = opts
 
   if (!opts.skipInit) {
     execFileSync('git', ['init', '.'], { cwd, stdio: 'ignore' })
   }
 
-  if (pkgAuthor || pkgContributors) {
-    fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify({
+  if (pkgAuthor || pkgContributors || pkgBroken) {
+    let pkg = JSON.stringify({
       name: 'example',
       private: true,
       author: pkgAuthor,
       contributors: pkgContributors
-    }))
+    })
+
+    if (pkgBroken) {
+      pkg = pkg.slice(1)
+    }
+
+    fs.writeFileSync(path.join(cwd, 'package.json'), pkg)
   }
 
   gitUsers.forEach(function ([name, email], index) {
@@ -350,11 +364,14 @@ function run (fixture, opts, test) {
     execFileSync('git', ['commit', '-m', 'commit ' + index], { cwd, stdio: 'ignore' })
   })
 
-  const input = fs.readFileSync(inputFile, 'utf8').trim()
+  const input = vfile.readSync(inputFile)
+
+  input.path = path.relative(__dirname, inputFile)
+  input.cwd = cwd
+
   const expected = fs.readFileSync(outputFile, 'utf8').trim()
 
   remark()
-    .use(() => (tree, file) => { file.cwd = cwd })
     .use(plugin, options)
     .process(input, (err, file) => {
       const actual = String(file).trim()

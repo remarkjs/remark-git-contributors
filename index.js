@@ -2,16 +2,17 @@
 
 const gitContributors = require('contributors-from-git')
 const injectContributors = require('remark-contributors')
+const vfile = require('to-vfile')
+const findUp = require('vfile-find-up')
 const resolve = require('resolve')
 const heading = require('mdast-util-heading-range')
 const parseAuthor = require('parse-author')
 const deep = require('deep-dot')
 const path = require('path')
-const fs = require('fs')
 const plugin = require('./package.json').name
 const defaultFormatters = require('./formatters')
 
-var noreply = '@users.noreply.github.com'
+const noreply = '@users.noreply.github.com'
 
 const headingExpression = /^contributors$/i
 
@@ -23,14 +24,15 @@ module.exports = function attacher (opts) {
   }
 
   return function transform (root, file, callback) {
-    // Skip work if there's no Contributors heading. This is merely
-    // an optimization, because remark-contributors also does this.
+    // Skip work if there's no Contributors heading.
+    // remark-contributors also does this so this is an optimization.
     if (!hasHeading(root, headingExpression) && !opts.appendIfMissing) {
       return process.nextTick(callback)
     }
 
     const cwd = path.resolve(opts.cwd || file.cwd)
-    const pkg = maybePackage(cwd)
+    /* istanbul ignore next - else is for stdin, typically not used. */
+    const base = file.dirname ? path.resolve(cwd, file.dirname) : cwd
     let indices
 
     try {
@@ -39,13 +41,48 @@ module.exports = function attacher (opts) {
       return process.nextTick(callback, err)
     }
 
-    indexContributor(indices, pkg.author)
+    findUp.one('package.json', base, onfoundpackage)
 
-    if (Array.isArray(pkg.contributors)) {
-      pkg.contributors.forEach(indexContributor.bind(null, indices))
+    function onfoundpackage (err, file) {
+      /* istanbul ignore if - `find-up` currently never passes errors. */
+      if (err) {
+        callback(err)
+      } else if (file) {
+        vfile.read(file, onreadpackage)
+      } else {
+        onpackage({})
+      }
     }
 
-    gitContributors(cwd, function (err, contributors) {
+    function onreadpackage (err, file) {
+      var pkg
+
+      /* istanbul ignore if - files that are found but cannot be read are hard
+       * to test. */
+      if (err) {
+        return callback(err)
+      } else {
+        try {
+          pkg = JSON.parse(file)
+        } catch (error) {
+          return callback(error)
+        }
+
+        onpackage(pkg)
+      }
+    }
+
+    function onpackage (pkg) {
+      indexContributor(indices, pkg.author)
+
+      if (Array.isArray(pkg.contributors)) {
+        pkg.contributors.forEach(indexContributor.bind(null, indices))
+      }
+
+      gitContributors(cwd, ongitcontributors)
+    }
+
+    function ongitcontributors (err, contributors) {
       if (err) {
         if (/does not have any commits yet/.test(err)) {
           file.message('could not get Git contributors as there are no commits yet', null, `${plugin}:no-commits`)
@@ -143,16 +180,7 @@ module.exports = function attacher (opts) {
         appendIfMissing: opts.appendIfMissing,
         align: 'left'
       })(root, file, callback)
-    })
-  }
-}
-
-function maybePackage (cwd) {
-  try {
-    const buf = fs.readFileSync(path.join(cwd, 'package.json'))
-    return JSON.parse(buf)
-  } catch (err) {
-    return {}
+    }
   }
 }
 
