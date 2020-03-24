@@ -17,7 +17,7 @@ Collects contributors from Git history, deduplicates them, augments it with
 metadata found in options, a module, or `package.json` and calls
 [`remark-contributors`][contributors] to render the Markdown table.
 
-## Table of Contents
+## Contents
 
 *   [Install](#install)
 *   [Use](#use)
@@ -35,7 +35,7 @@ metadata found in options, a module, or `package.json` and calls
 
 [npm][]:
 
-```shsh
+```sh
 npm install remark-git-contributors
 ```
 
@@ -50,8 +50,8 @@ remark --use remark-git-contributors readme.md -o
 ### Inject
 
 Injecting a contributors section is opt-in: if a `Contributors` heading is not
-found in the Markdown (case- and level-insensitive), the plugin is a noop,
-unless [`appendIfMissing`][api] is set.
+found in the Markdown (case- and level-insensitive), the plugin doesn’t do
+anything, unless [`appendIfMissing`][api] is set.
 
 If the Git repository has many contributors, it is recommended to have them
 listed in a `contributors.md` rather than `readme.md`.
@@ -139,7 +139,7 @@ for example because they switched email addresses while contributing to the
 project, or if their name or email are wrong, you can “merge” and fix
 contributors in Git by using a [`.mailmap` file][mailmap].
 
-## Supported Properties
+## Supported properties
 
 *   `name`: overrides the name stored in git commits
 *   `github`: GitHub username
@@ -176,7 +176,7 @@ Working directory from which to resolve a `contributors` module, if any
 
 ###### `options.appendIfMissing`
 
-Inject Contributors section if there is none (`boolean`, default: `false`).
+Inject a Contributors section if there is none (`boolean`, default: `false`).
 
 ## Security
 
@@ -205,8 +205,8 @@ See [`contributing.md`][contributing] in [`remarkjs/.github`][health] for ways
 to get started.
 See [`support.md`][support] for ways to get help.
 
-This project has a [Code of Conduct][coc].
-By interacting with this repository, organisation, or community you agree to
+This project has a [code of conduct][coc].
+By interacting with this repository, organization, or community you agree to
 abide by its terms.
 
 ## Contributors
@@ -260,7 +260,7 @@ abide by its terms.
 
 [collective]: https://opencollective.com/unified
 
-[chat-badge]: https://img.shields.io/badge/join%20the%20community-on%20spectrum-7b16ff.svg
+[chat-badge]: https://img.shields.io/badge/chat-spectrum-7b16ff.svg
 
 [chat]: https://spectrum.chat/unified/remark
 

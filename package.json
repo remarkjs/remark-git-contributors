@@ -76,6 +76,12 @@
   "remarkConfig": {
     "plugins": [
       "preset-wooorm",
+      [
+        "toc",
+        {
+          "heading": "contents"
+        }
+      ],
       "."
     ]
   }
