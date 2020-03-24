@@ -23,7 +23,7 @@ metadata found in options, a module, or `package.json` and calls
 *   [Use](#use)
     *   [Inject](#inject)
     *   [Metadata](#metadata)
-*   [Supported Properties](#supported-properties)
+*   [Supported properties](#supported-properties)
 *   [API](#api)
     *   [`remark().use(gitContributors[, options])`](#remarkusegitcontributors-options)
 *   [Security](#security)
