@@ -367,9 +367,10 @@ function run (fixture, opts, test) {
   const input = vfile.readSync(inputFile)
 
   input.path = path.relative(__dirname, inputFile)
+  input.contents = String(input).replace(/\r\n/g, '\n')
   input.cwd = cwd
 
-  const expected = fs.readFileSync(outputFile, 'utf8').trim()
+  const expected = fs.readFileSync(outputFile, 'utf8').trim().replace(/\r\n/g, '\n')
 
   remark()
     .use(plugin, options)
