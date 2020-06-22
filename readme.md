@@ -226,7 +226,7 @@ abide by its terms.
 
 [version]: https://www.npmjs.org/package/remark-git-contributors
 
-[travis-badge]: https://img.shields.io/travis/remarkjs/remark-git-contributors/master.svg?label=travis
+[travis-badge]: https://img.shields.io/travis/remarkjs/remark-git-contributors/main.svg?label=travis
 
 [travis]: https://travis-ci.org/remarkjs/remark-git-contributors
 
@@ -268,11 +268,11 @@ abide by its terms.
 
 [health]: https://github.com/remarkjs/.github
 
-[contributing]: https://github.com/remarkjs/.github/blob/master/contributing.md
+[contributing]: https://github.com/remarkjs/.github/blob/HEAD/contributing.md
 
-[support]: https://github.com/remarkjs/.github/blob/master/support.md
+[support]: https://github.com/remarkjs/.github/blob/HEAD/support.md
 
-[coc]: https://github.com/remarkjs/.github/blob/master/code-of-conduct.md
+[coc]: https://github.com/remarkjs/.github/blob/HEAD/code-of-conduct.md
 
 [license]: license
 
@@ -280,7 +280,7 @@ abide by its terms.
 
 [contributors]: https://github.com/remarkjs/remark-contributors
 
-[cli]: https://github.com/remarkjs/remark/tree/master/packages/remark-cli
+[cli]: https://github.com/remarkjs/remark/tree/HEAD/packages/remark-cli
 
 [api]: #api
 
