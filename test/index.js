@@ -5,6 +5,7 @@ const fs = require('fs')
 const path = require('path')
 const vfile = require('to-vfile')
 const remark = require('remark')
+const gfm = require('remark-gfm')
 const tmp = require('tmpgen')('remark-git-contributors/*')
 const execFileSync = require('child_process').execFileSync
 const plugin = require('..')
@@ -373,6 +374,7 @@ function run (fixture, opts, test) {
   const expected = fs.readFileSync(outputFile, 'utf8').trim().replace(/\r\n/g, '\n')
 
   remark()
+    .use(gfm)
     .use(plugin, options)
     .process(input, (err, file) => {
       const actual = String(file).trim()

@@ -17,6 +17,14 @@ Collects contributors from Git history, deduplicates them, augments it with
 metadata found in options, a module, or `package.json` and calls
 [`remark-contributors`][contributors] to render the Markdown table.
 
+## Note!
+
+This plugin is ready for the new parser in remark
+([`micromark`](https://github.com/micromark/micromark),
+see [`remarkjs/remark#536`](https://github.com/remarkjs/remark/pull/536)).
+No change is needed: it works exactly the same now as it did before!
+(note that `remark-gfm` must be used as well to support tables)
+
 ## Contents
 
 *   [Install](#install)
