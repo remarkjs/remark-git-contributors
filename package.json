@@ -56,16 +56,16 @@
   },
   "devDependencies": {
     "nyc": "^15.0.0",
-    "remark": "^13.0.0-alpha.1",
-    "remark-cli": "^8.0.0",
+    "remark": "^13.0.0",
+    "remark-cli": "^9.0.0",
     "remark-gfm": "^1.0.0",
-    "remark-preset-wooorm": "^7.0.0",
+    "remark-preset-wooorm": "^8.0.0",
     "standard": "^14.0.0",
     "tape": "^5.0.0",
     "tmpgen": "^1.0.0"
   },
   "scripts": {
-    "format": "standard --fix && remark *.md -qfo",
+    "format": "standard --fix && remark . -qfo --ignore-pattern test/",
     "test-api": "node test",
     "test-coverage": "nyc --reporter lcov tape test/index.js",
     "test": "npm run format && npm run test-coverage"
