@@ -1,8 +1,7 @@
 # remark-git-contributors
 
 [![Version][version-badge]][version]
-[![Travis][travis-badge]][travis]
-[![AppVeyor][appveyor-badge]][appveyor]
+[![Build][build-badge]][build]
 [![Coverage][coverage-badge]][coverage]
 [![Dependencies][dependencies-badge]][dependencies]
 [![JavaScript Style Guide][standard-badge]][standard]
@@ -234,13 +233,9 @@ abide by its terms.
 
 [version]: https://www.npmjs.org/package/remark-git-contributors
 
-[travis-badge]: https://img.shields.io/travis/remarkjs/remark-git-contributors/main.svg?label=travis
+[build-badge]: https://github.com/remarkjs/remark-git-contributors/workflows/main/badge.svg
 
-[travis]: https://travis-ci.org/remarkjs/remark-git-contributors
-
-[appveyor-badge]: https://img.shields.io/appveyor/ci/remarkjs/remark-git-contributors.svg?label=appveyor
-
-[appveyor]: https://ci.appveyor.com/project/remarkjs/remark-git-contributors
+[build]: https://github.com/remarkjs/remark-git-contributors/actions
 
 [coverage-badge]: https://img.shields.io/codecov/c/github/remarkjs/remark-git-contributors.svg
 
