@@ -55,7 +55,7 @@ module.exports = function attacher (opts) {
     }
 
     function onreadpackage (err, file) {
-      var pkg
+      let pkg
 
       /* istanbul ignore if - files that are found but cannot be read are hard
        * to test. */
@@ -96,7 +96,7 @@ module.exports = function attacher (opts) {
       contributors = contributors.map(({ name, email, commits }) => {
         if (!email) {
           file.message(`no git email for ${name}`, null, `${plugin}:require-git-email`)
-          return
+          return undefined
         }
 
         const metadata = indices.email[email] ||
@@ -111,7 +111,7 @@ module.exports = function attacher (opts) {
           name === 'Greenkeeper' ||
           metadata.github === 'greenkeeper[bot]' ||
           metadata.github === 'greenkeeperio-bot') {
-          return
+          return undefined
         }
 
         let social = null

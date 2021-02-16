@@ -60,7 +60,7 @@
     "remark-cli": "^9.0.0",
     "remark-gfm": "^1.0.0",
     "remark-preset-wooorm": "^8.0.0",
-    "standard": "^14.0.0",
+    "standard": "^16.0.0",
     "tape": "^5.0.0",
     "tmpgen": "^1.0.0"
   },
