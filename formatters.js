@@ -11,7 +11,8 @@ exports.commits = {
 exports.social = {
   label: 'Social',
   format: function (value, key) {
-    /* istanbul ignore if - shouldn’t happen, but let’s keep it here just to be sure. */
+    // Shouldn’t happen, but let’s keep it here just to be sure.
+    /* c8 ignore next 3 */
     if (!value) {
       return ''
     }

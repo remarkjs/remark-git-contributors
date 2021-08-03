@@ -31,7 +31,8 @@ module.exports = function attacher (opts) {
     }
 
     const cwd = path.resolve(opts.cwd || file.cwd)
-    /* istanbul ignore next - else is for stdin, typically not used. */
+    // Else is for stdin, typically not used.
+    /* c8 ignore next */
     const base = file.dirname ? path.resolve(cwd, file.dirname) : cwd
     let indices
 
@@ -44,7 +45,8 @@ module.exports = function attacher (opts) {
     findUp.one('package.json', base, onfoundpackage)
 
     function onfoundpackage (err, file) {
-      /* istanbul ignore if - `find-up` currently never passes errors. */
+      // `find-up` currently never passes errors.
+      /* c8 ignore next 3 */
       if (err) {
         callback(err)
       } else if (file) {
@@ -57,8 +59,8 @@ module.exports = function attacher (opts) {
     function onreadpackage (err, file) {
       let pkg
 
-      /* istanbul ignore if - files that are found but cannot be read are hard
-       * to test. */
+      // Files that are found but cannot be read are hard to test.
+      /* c8 ignore next 3 */
       if (err) {
         return callback(err)
       } else {
@@ -235,7 +237,8 @@ function indexContributors (cwd, contributors) {
     try {
       path = resolve.sync(contributors, { basedir: cwd })
     } catch (err) {
-      /* istanbul ignore if - Hard to test. */
+      // Hard to test.
+      /* c8 ignore next */
       if (err.code !== 'MODULE_NOT_FOUND') throw err
 
       // Fallback to process.cwd()
