@@ -1,3 +1,1 @@
-exports.default = [
-  { email: 'test@localhost', github: 'test', twitter: 'test' }
-]
+exports.default = [{email: 'test@localhost', github: 'test', twitter: 'test'}]

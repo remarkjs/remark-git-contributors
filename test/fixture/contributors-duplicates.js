@@ -1,4 +1,1 @@
-exports.default = [
-  'test <test@localhost>',
-  'test two <test@localhost>'
-]
+exports.default = ['test <test@localhost>', 'test two <test@localhost>']

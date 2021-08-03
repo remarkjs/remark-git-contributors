@@ -1,3 +1,1 @@
-module.exports = [
-  { email: 'test@localhost', github: 'test', twitter: 'test' }
-]
+module.exports = [{email: 'test@localhost', github: 'test', twitter: 'test'}]

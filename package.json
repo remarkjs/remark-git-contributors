@@ -56,19 +56,35 @@
   },
   "devDependencies": {
     "c8": "^7.0.0",
+    "prettier": "^2.0.0",
     "remark": "^13.0.0",
     "remark-cli": "^9.0.0",
     "remark-gfm": "^1.0.0",
     "remark-preset-wooorm": "^8.0.0",
-    "standard": "^16.0.0",
     "tape": "^5.0.0",
-    "tmpgen": "^1.0.0"
+    "tmpgen": "^1.0.0",
+    "xo": "^0.37.0"
   },
   "scripts": {
-    "format": "standard --fix && remark . -qfo --ignore-pattern test/",
+    "format": "remark . -qfo --ignore-pattern test/ && prettier . -w --loglevel warn && xo --fix",
     "test-api": "node --conditions development test/index.js",
     "test-coverage": "c8 --check-coverage --branches 100 --functions 100 --lines 100 --statements 100 --reporter lcov npm run test-api",
     "test": "npm run format && npm run test-coverage"
+  },
+  "prettier": {
+    "tabWidth": 2,
+    "useTabs": false,
+    "singleQuote": true,
+    "bracketSpacing": false,
+    "semi": false,
+    "trailingComma": "none"
+  },
+  "xo": {
+    "prettier": true,
+    "rules": {
+      "no-var": "off",
+      "prefer-arrow-callback": "off"
+    }
   },
   "remarkConfig": {
     "plugins": [

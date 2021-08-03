@@ -10,45 +10,45 @@ const parseAuthor = require('parse-author')
 const deep = require('deep-dot')
 const path = require('path')
 const plugin = require('./package.json').name
-const defaultFormatters = require('./formatters')
+const defaultFormatters = require('./formatters.js')
 
 const noreply = '@users.noreply.github.com'
 
 const headingExpression = /^contributors$/i
 
-module.exports = function attacher (opts) {
-  if (typeof opts === 'string') {
-    opts = { contributors: opts }
-  } else if (!opts) {
-    opts = {}
+module.exports = function (options) {
+  if (typeof options === 'string') {
+    options = {contributors: options}
+  } else if (!options) {
+    options = {}
   }
 
-  return function transform (root, file, callback) {
+  return function (root, file, callback) {
     // Skip work if there's no Contributors heading.
     // remark-contributors also does this so this is an optimization.
-    if (!hasHeading(root, headingExpression) && !opts.appendIfMissing) {
+    if (!hasHeading(root, headingExpression) && !options.appendIfMissing) {
       return process.nextTick(callback)
     }
 
-    const cwd = path.resolve(opts.cwd || file.cwd)
+    const cwd = path.resolve(options.cwd || file.cwd)
     // Else is for stdin, typically not used.
     /* c8 ignore next */
     const base = file.dirname ? path.resolve(cwd, file.dirname) : cwd
     let indices
 
     try {
-      indices = indexContributors(cwd, opts.contributors)
-    } catch (err) {
-      return process.nextTick(callback, err)
+      indices = indexContributors(cwd, options.contributors)
+    } catch (error) {
+      return process.nextTick(callback, error)
     }
 
     findUp.one('package.json', base, onfoundpackage)
 
-    function onfoundpackage (err, file) {
+    function onfoundpackage(error, file) {
       // `find-up` currently never passes errors.
       /* c8 ignore next 3 */
-      if (err) {
-        callback(err)
+      if (error) {
+        callback(error)
       } else if (file) {
         vfile.read(file, onreadpackage)
       } else {
@@ -56,25 +56,25 @@ module.exports = function attacher (opts) {
       }
     }
 
-    function onreadpackage (err, file) {
+    function onreadpackage(error, file) {
       let pkg
 
       // Files that are found but cannot be read are hard to test.
       /* c8 ignore next 3 */
-      if (err) {
-        return callback(err)
-      } else {
-        try {
-          pkg = JSON.parse(file)
-        } catch (error) {
-          return callback(error)
-        }
-
-        onpackage(pkg)
+      if (error) {
+        return callback(error)
       }
+
+      try {
+        pkg = JSON.parse(file)
+      } catch (error) {
+        return callback(error)
+      }
+
+      onpackage(pkg)
     }
 
-    function onpackage (pkg) {
+    function onpackage(pkg) {
       indexContributor(indices, pkg.author)
 
       if (Array.isArray(pkg.contributors)) {
@@ -84,35 +84,49 @@ module.exports = function attacher (opts) {
       gitContributors(cwd, ongitcontributors)
     }
 
-    function ongitcontributors (err, contributors) {
-      if (err) {
-        if (/does not have any commits yet/.test(err)) {
-          file.message('could not get Git contributors as there are no commits yet', null, `${plugin}:no-commits`)
+    function ongitcontributors(error, contributors) {
+      if (error) {
+        if (/does not have any commits yet/.test(error)) {
+          file.message(
+            'could not get Git contributors as there are no commits yet',
+            null,
+            `${plugin}:no-commits`
+          )
           callback()
           return
         }
 
-        return callback(new Error('Could not get Git contributors: ' + err.message))
+        return callback(
+          new Error('Could not get Git contributors: ' + error.message)
+        )
       }
 
-      contributors = contributors.map(({ name, email, commits }) => {
+      contributors = contributors.map(({name, email, commits}) => {
         if (!email) {
-          file.message(`no git email for ${name}`, null, `${plugin}:require-git-email`)
+          file.message(
+            `no git email for ${name}`,
+            null,
+            `${plugin}:require-git-email`
+          )
           return undefined
         }
 
-        const metadata = indices.email[email] ||
-          indices.name[name.toLowerCase()] || {}
+        const metadata =
+          indices.email[email] || indices.name[name.toLowerCase()] || {}
 
         if (email.endsWith(noreply)) {
-          metadata.github = email.slice(0, -noreply.length).replace(/^[\d]+\+/, '')
+          metadata.github = email
+            .slice(0, -noreply.length)
+            .replace(/^\d+\+/, '')
           indexValue(indices.github, metadata.github, metadata)
         }
 
-        if (email.endsWith('@greenkeeper.io') ||
+        if (
+          email.endsWith('@greenkeeper.io') ||
           name === 'Greenkeeper' ||
           metadata.github === 'greenkeeper[bot]' ||
-          metadata.github === 'greenkeeperio-bot') {
+          metadata.github === 'greenkeeperio-bot'
+        ) {
           return undefined
         }
 
@@ -127,12 +141,16 @@ module.exports = function attacher (opts) {
               text: '@' + handle + '@twitter'
             }
           } else {
-            file.message(`invalid twitter handle for ${email}`, null, `${plugin}:valid-twitter`)
+            file.message(
+              `invalid twitter handle for ${email}`,
+              null,
+              `${plugin}:valid-twitter`
+            )
           }
         } else if (metadata.mastodon) {
-          const arr = metadata.mastodon.split('@').filter(Boolean)
-          const handle = arr[0]
-          const domain = arr[1]
+          const array = metadata.mastodon.split('@').filter(Boolean)
+          const handle = array[0]
+          const domain = array[1]
 
           if (handle && domain) {
             social = {
@@ -140,7 +158,11 @@ module.exports = function attacher (opts) {
               text: '@' + handle + '@' + domain
             }
           } else {
-            file.message(`invalid mastodon handle for ${email}`, null, `${plugin}:valid-mastodon`)
+            file.message(
+              `invalid mastodon handle for ${email}`,
+              null,
+              `${plugin}:valid-mastodon`
+            )
           }
         } else {
           file.info(`no social profile for ${email}`, null, `${plugin}:social`)
@@ -160,34 +182,34 @@ module.exports = function attacher (opts) {
         .reduce(dedup(['email', 'name', 'github', 'social.url']), [])
         .sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name))
 
-      if (opts.limit && opts.limit > 0) {
-        contributors = contributors.slice(0, opts.limit)
+      if (options.limit && options.limit > 0) {
+        contributors = contributors.slice(0, options.limit)
       }
 
       const formatters = Object.assign({}, defaultFormatters)
 
       // Exclude GitHub column if all cells would be empty
-      if (contributors.every(c => !c.github)) {
+      if (contributors.every((c) => !c.github)) {
         formatters.github = false
       }
 
       // Exclude Social column if all cells would be empty
-      if (contributors.every(c => !c.social)) {
+      if (contributors.every((c) => !c.social)) {
         formatters.social = false
       }
 
       injectContributors({
         contributors,
         formatters,
-        appendIfMissing: opts.appendIfMissing,
+        appendIfMissing: options.appendIfMissing,
         align: 'left'
       })(root, file, callback)
     }
   }
 }
 
-function dedup (keys) {
-  const map = new Map(keys.map(key => [key, new Map()]))
+function dedup(keys) {
+  const map = new Map(keys.map((key) => [key, new Map()]))
 
   return function (acc, contributor) {
     for (const key of keys) {
@@ -210,7 +232,7 @@ function dedup (keys) {
   }
 }
 
-function hasHeading (tree, test) {
+function hasHeading(tree, test) {
   let found = false
 
   heading(tree, test, function () {
@@ -220,14 +242,14 @@ function hasHeading (tree, test) {
   return found
 }
 
-function indexContributors (cwd, contributors) {
+function indexContributors(cwd, contributors) {
   const indices = {
     email: {},
     github: {},
     name: {}
   }
 
-  if (contributors == null) {
+  if (contributors === null || contributors === undefined) {
     return indices
   }
 
@@ -235,14 +257,14 @@ function indexContributors (cwd, contributors) {
     let path
 
     try {
-      path = resolve.sync(contributors, { basedir: cwd })
-    } catch (err) {
+      path = resolve.sync(contributors, {basedir: cwd})
+    } catch (error) {
       // Hard to test.
       /* c8 ignore next */
-      if (err.code !== 'MODULE_NOT_FOUND') throw err
+      if (error.code !== 'MODULE_NOT_FOUND') throw error
 
       // Fallback to process.cwd()
-      path = resolve.sync(contributors, { basedir: process.cwd() })
+      path = resolve.sync(contributors, {basedir: process.cwd()})
     }
 
     const exported = require(path)
@@ -255,7 +277,9 @@ function indexContributors (cwd, contributors) {
   }
 
   if (!Array.isArray(contributors)) {
-    throw new TypeError('The "contributors" option must be (or resolve to) an array')
+    throw new TypeError(
+      'The "contributors" option must be (or resolve to) an array'
+    )
   }
 
   for (const contributor of contributors) {
@@ -265,12 +289,11 @@ function indexContributors (cwd, contributors) {
   return indices
 }
 
-function indexContributor (indices, contributor) {
-  if (typeof contributor === 'string') {
-    contributor = parseAuthor(contributor)
-  } else {
-    contributor = Object.assign({}, contributor)
-  }
+function indexContributor(indices, contributor) {
+  contributor =
+    typeof contributor === 'string'
+      ? parseAuthor(contributor)
+      : Object.assign({}, contributor)
 
   const emails = (contributor.emails || []).concat(contributor.email || [])
 
@@ -282,7 +305,7 @@ function indexContributor (indices, contributor) {
   indexValue(indices.name, contributor.name, contributor)
 }
 
-function indexValue (index, value, contributor) {
+function indexValue(index, value, contributor) {
   if (value) {
     value = value.toLowerCase()
 

@@ -10,7 +10,7 @@ exports.commits = {
 
 exports.social = {
   label: 'Social',
-  format: function (value, key) {
+  format(value) {
     // Shouldn’t happen, but let’s keep it here just to be sure.
     /* c8 ignore next 3 */
     if (!value) {
@@ -20,10 +20,12 @@ exports.social = {
     return {
       type: 'link',
       url: value.url,
-      children: [{
-        type: 'strong',
-        children: [{ type: 'text', value: value.text }]
-      }]
+      children: [
+        {
+          type: 'strong',
+          children: [{type: 'text', value: value.text}]
+        }
+      ]
     }
   }
 }
