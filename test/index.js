@@ -28,7 +28,7 @@ test('basic', (t) => {
 test('with metadata as strings', (t) => {
   run(
     '00',
-    {main: 'contributors-string.js', options: '.'},
+    {main: 'contributors-string.js', options: './index.js'},
     ({file, actual, expected}) => {
       t.is(actual, expected)
       t.deepEqual(
@@ -43,7 +43,7 @@ test('with metadata as strings', (t) => {
 test('with duplicate metadata', (t) => {
   run(
     '00',
-    {main: 'contributors-duplicates.js', options: '.'},
+    {main: 'contributors-duplicates.js', options: './index.js'},
     ({file, actual, expected}) => {
       t.is(actual, expected)
       t.deepEqual(
@@ -71,7 +71,7 @@ test('with metadata', (t) => {
 test('with metadata from module (main export)', (t) => {
   run(
     '01',
-    {main: 'contributors-main.js', options: '.'},
+    {main: 'contributors-main.js', options: './index.js'},
     ({file, actual, expected}) => {
       t.is(actual, expected)
       t.deepEqual(
@@ -86,7 +86,7 @@ test('with metadata from module (main export)', (t) => {
 test('with metadata from module (named export)', (t) => {
   run(
     '01',
-    {main: 'contributors-named.js', options: '.'},
+    {main: 'contributors-named.js', options: './index.js'},
     ({file, actual, expected}) => {
       t.is(actual, expected)
       t.deepEqual(
@@ -99,23 +99,27 @@ test('with metadata from module (named export)', (t) => {
 })
 
 test('with an unfound module id', (t) => {
-  run('00', {options: 'missing.js'}, ({err}) => {
-    t.ok(/^Error: Cannot find module 'missing.js'/.test(err))
+  run('00', {options: './missing.js'}, ({err}) => {
+    t.ok(/Cannot find module/.test(err))
     t.end()
   })
 })
 
 test('with a throwing module', (t) => {
-  run('00', {main: 'contributors-throwing.js', options: '.'}, ({err}) => {
-    t.ok(String(err).startsWith('Error: Some error!'))
-    t.end()
-  })
+  run(
+    '00',
+    {main: 'contributors-throwing.js', options: './index.js'},
+    ({err}) => {
+      t.ok(String(err).startsWith('Error: Some error!'))
+      t.end()
+    }
+  )
 })
 
 test('with an invalid exports', (t) => {
   run(
     '00',
-    {main: 'contributors-invalid-exports.js', options: '.'},
+    {main: 'contributors-invalid-exports.js', options: './index.js'},
     ({err}) => {
       t.ok(
         /^TypeError: The "contributors" option must be \(or resolve to\) an array/.test(
@@ -141,7 +145,7 @@ test('with an invalid contributors setting', (t) => {
 test('with metadata from module (default export)', (t) => {
   run(
     '01',
-    {main: 'contributors-default.js', options: '.'},
+    {main: 'contributors-default.js', options: './index.js'},
     ({file, actual, expected}) => {
       t.is(actual, expected)
       t.deepEqual(

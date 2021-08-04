@@ -50,10 +50,10 @@
   "dependencies": {
     "contributors-from-git": "^1.0.0",
     "dlv": "^1.0.0",
+    "load-plugin": "^4.0.0",
     "mdast-util-heading-range": "^3.0.0",
     "parse-author": "^2.0.0",
     "remark-contributors": "^5.0.0",
-    "resolve": "^1.8.1",
     "to-vfile": "^7.0.0",
     "vfile-find-up": "^6.0.0"
   },

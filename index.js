@@ -3,7 +3,7 @@ import gitContributors from 'contributors-from-git'
 import injectContributors from 'remark-contributors'
 import {read} from 'to-vfile'
 import {findUpOne} from 'vfile-find-up'
-import resolve from 'resolve'
+import {loadPlugin} from 'load-plugin'
 import {headingRange} from 'mdast-util-heading-range'
 import parseAuthor from 'parse-author'
 import dlv from 'dlv'
@@ -232,20 +232,10 @@ async function indexContributors(cwd, contributors) {
   }
 
   if (typeof contributors === 'string') {
-    let path
-
-    try {
-      path = resolve.sync(contributors, {basedir: cwd})
-    } catch (error) {
-      // Hard to test.
-      /* c8 ignore next */
-      if (error.code !== 'MODULE_NOT_FOUND') throw error
-
-      // Fallback to process.cwd()
-      path = resolve.sync(contributors, {basedir: process.cwd()})
-    }
-
-    const exported = await import(path)
+    const exported = await loadPlugin(contributors, {
+      cwd: [cwd, process.cwd()],
+      key: false
+    })
 
     if (Array.isArray(exported.contributors)) {
       contributors = exported.contributors

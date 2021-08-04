@@ -172,9 +172,8 @@ count, are rendered.
 
 Contributor metadata (`Array` or `string`, default: `[]`).
 Can be a list of contributor objects (see above).
-Can be a module id, that resolves either to a list of contributors or to an
-object with a `contributors` or `default` field that provides the list of
-contributors.
+Can be a module id that will be `import`ed which exports `contributors` as
+either the default export or as a `contributors` named export specifier.
 
 ###### `options.cwd`
 
