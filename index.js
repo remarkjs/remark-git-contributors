@@ -317,6 +317,8 @@ async function indexContributors(cwd, contributors) {
     indexContributor(indices, contributor)
   }
 
+  // Chromium coverage bug on Node 12.
+  /* c8 ignore next 2 */
   return indices
 }
 
