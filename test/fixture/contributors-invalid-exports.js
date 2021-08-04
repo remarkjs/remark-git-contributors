@@ -1,1 +1,3 @@
-module.exports = false
+const contributors = false
+
+export default contributors

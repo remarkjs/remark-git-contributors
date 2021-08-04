@@ -245,12 +245,12 @@ async function indexContributors(cwd, contributors) {
       path = resolve.sync(contributors, {basedir: process.cwd()})
     }
 
-    const exported = (await import(path)).default
+    const exported = await import(path)
 
-    if (Array.isArray(exported)) {
-      contributors = exported
-    } else if (typeof exported === 'object' && exported !== null) {
-      contributors = exported.contributors || exported.default
+    if (Array.isArray(exported.contributors)) {
+      contributors = exported.contributors
+    } else if (Array.isArray(exported.default)) {
+      contributors = exported.default
     }
   }
 

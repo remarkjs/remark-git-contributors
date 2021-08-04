@@ -1,1 +1,3 @@
-exports.default = ['test <test@localhost>']
+const contributors = ['test <test@localhost>']
+
+export default contributors

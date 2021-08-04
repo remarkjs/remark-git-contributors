@@ -91,8 +91,8 @@ To augment user metadata, configure the plugin in your `package.json`:
 Where `contributors` is either:
 
 *   An array in the form of `[{ email, name, … }, … ]`;
-*   A module id or path to a file that exports `contributors` or
-    `{ contributors }`.
+*   A module id or path to a file that exports `contributors` as either the
+    default export or as a `contributors` named export specifier.
 
 Note that `remark-git-contributors` excludes people that are not in Git history.
 This way the `contributors` metadata can be reused in multiple projects.

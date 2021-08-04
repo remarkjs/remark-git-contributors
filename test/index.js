@@ -391,20 +391,19 @@ function run(fixture, options_, test) {
     execFileSync('git', ['init', '.'], {cwd, stdio: 'ignore'})
   }
 
-  if (pkgAuthor || pkgContributors || pkgBroken) {
-    let pkg = JSON.stringify({
-      name: 'example',
-      private: true,
-      author: pkgAuthor,
-      contributors: pkgContributors
-    })
+  let pkg = JSON.stringify({
+    name: 'example',
+    type: 'module',
+    private: true,
+    author: pkgAuthor,
+    contributors: pkgContributors
+  })
 
-    if (pkgBroken) {
-      pkg = pkg.slice(1)
-    }
-
-    fs.writeFileSync(path.join(cwd, 'package.json'), pkg)
+  if (pkgBroken) {
+    pkg = pkg.slice(1)
   }
+
+  fs.writeFileSync(path.join(cwd, 'package.json'), pkg)
 
   let index = -1
   while (++index < gitUsers.length) {
