@@ -1,6 +1,6 @@
 import path from 'path'
 import gitContributors from 'contributors-from-git'
-import injectContributors from 'remark-contributors'
+import remarkContributors from 'remark-contributors'
 import {read} from 'to-vfile'
 import {findUpOne} from 'vfile-find-up'
 import {loadPlugin} from 'load-plugin'
@@ -169,18 +169,12 @@ export default function remarkGitContributors(options) {
           formatters.social = false
         }
 
-        injectContributors({
+        remarkContributors({
           contributors,
           formatters,
           appendIfMissing: options.appendIfMissing,
           align: 'left'
-        })(root, file, (error) => {
-          if (error) {
-            reject(error)
-          } else {
-            resolve()
-          }
-        })
+        })(root, file).then(resolve, reject)
       }
     })
   }
