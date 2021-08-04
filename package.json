@@ -1,7 +1,7 @@
 {
   "name": "remark-git-contributors",
   "version": "3.0.0",
-  "description": "remark plugin to inject Git contributors into a Markdown table",
+  "description": "remark plugin to inject Git contributors into a markdown table",
   "license": "MIT",
   "keywords": [
     "unified",

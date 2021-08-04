@@ -11,10 +11,10 @@
 [![Backers][backers-badge]][collective]
 [![Chat][chat-badge]][chat]
 
-[**remark**][remark] plugin to inject Git contributors into a Markdown table.
+[**remark**][remark] plugin to inject Git contributors into a markdown table.
 Collects contributors from Git history, deduplicates them, augments it with
 metadata found in options, a module, or `package.json` and calls
-[`remark-contributors`][contributors] to render the Markdown table.
+[`remark-contributors`][contributors] to render the markdown table.
 
 ## Note!
 
@@ -32,13 +32,16 @@ No change is needed: it works exactly the same now as it did before!
     *   [Metadata](#metadata)
 *   [Supported properties](#supported-properties)
 *   [API](#api)
-    *   [`remark().use(gitContributors[, options])`](#remarkusegitcontributors-options)
+    *   [`unified().use(remarkGitContributors[, options])`](#unifieduseremarkgitcontributors-options)
 *   [Security](#security)
 *   [Contribute](#contribute)
 *   [Contributors](#contributors)
 *   [License](#license)
 
 ## Install
+
+This package is [ESM only](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c):
+Node 12+ is needed to use it and it must be `import`ed instead of `require`d.
 
 [npm][]:
 
@@ -48,7 +51,7 @@ npm install remark-git-contributors
 
 ## Use
 
-With [`remark-cli`][cli], modifying a Markdown file in place (`-o`):
+With [`remark-cli`][cli], modifying a markdown file in place (`-o`):
 
 ```sh
 remark --use remark-git-contributors readme.md -o
@@ -57,7 +60,7 @@ remark --use remark-git-contributors readme.md -o
 ### Inject
 
 Injecting a contributors section is opt-in: if a `Contributors` heading is not
-found in the Markdown (case- and level-insensitive), the plugin doesn’t do
+found in the markdown (case- and level-insensitive), the plugin doesn’t do
 anything, unless [`appendIfMissing`][api] is set.
 
 If the Git repository has many contributors, it is recommended to have them
@@ -155,11 +158,12 @@ contributors in Git by using a [`.mailmap` file][mailmap].
 
 ## API
 
-### `remark().use(gitContributors[, options])`
+This package exports no identifiers.
+The default export is `remarkGitContributors`.
 
-Inject Git contributors into a Markdown table.
+### `unified().use(remarkGitContributors[, options])`
 
-##### `options`
+Inject Git contributors into a markdown table.
 
 ###### `options.limit`
 
@@ -197,8 +201,8 @@ This could open you up to a [cross-site scripting (XSS)][xss] attack if you pass
 user provided content in or store user provided content in `package.json` or
 Git.
 
-This may become a problem if the Markdown later transformed to
-[**rehype**][rehype] ([**hast**][hast]) or opened in an unsafe Markdown viewer.
+This may become a problem if the markdown later transformed to
+[**rehype**][rehype] ([**hast**][hast]) or opened in an unsafe markdown viewer.
 
 If `contributors` is a string, it is handled as a module identifier and
 loaded with `require`.
