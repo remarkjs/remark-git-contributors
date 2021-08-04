@@ -1,9 +1,17 @@
+/**
+ * @typedef {import('vfile').VFile} VFile
+ * @typedef {import('type-fest').PackageJson} PackageJson
+ * @typedef {import('type-fest').PackageJson.Person} Person
+ * @typedef {import('../index.js').Options} Options
+ */
+
 import test from 'tape'
 import fs from 'fs'
 import path from 'path'
 import {readSync} from 'to-vfile'
 import {remark} from 'remark'
 import remarkGfm from 'remark-gfm'
+// @ts-expect-error: untyped.
 import tmpgen from 'tmpgen'
 import {execFileSync} from 'child_process'
 import remarkGitContributors from '../index.js'
@@ -18,7 +26,7 @@ test('basic', (t) => {
   run('00', {}, ({file, actual, expected}) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map((d) => d.reason),
+      (file || {messages: []}).messages.map((d) => d.reason),
       ['no social profile for ' + testEmail]
     )
     t.end()
@@ -32,7 +40,7 @@ test('with metadata as strings', (t) => {
     ({file, actual, expected}) => {
       t.is(actual, expected)
       t.deepEqual(
-        file.messages.map((d) => d.reason),
+        (file || {messages: []}).messages.map((d) => d.reason),
         ['no social profile for ' + testEmail]
       )
       t.end()
@@ -47,7 +55,7 @@ test('with duplicate metadata', (t) => {
     ({file, actual, expected}) => {
       t.is(actual, expected)
       t.deepEqual(
-        file.messages.map((d) => d.reason),
+        (file || {messages: []}).messages.map((d) => d.reason),
         ['no social profile for ' + testEmail]
       )
       t.end()
@@ -61,7 +69,7 @@ test('with metadata', (t) => {
   run('01', {options: {contributors}}, ({file, actual, expected}) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map((d) => d.reason),
+      (file || {messages: []}).messages.map((d) => d.reason),
       []
     )
     t.end()
@@ -75,7 +83,7 @@ test('with metadata from module (main export)', (t) => {
     ({file, actual, expected}) => {
       t.is(actual, expected)
       t.deepEqual(
-        file.messages.map((d) => d.reason),
+        (file || {messages: []}).messages.map((d) => d.reason),
         []
       )
       t.end()
@@ -90,7 +98,7 @@ test('with metadata from module (named export)', (t) => {
     ({file, actual, expected}) => {
       t.is(actual, expected)
       t.deepEqual(
-        file.messages.map((d) => d.reason),
+        (file || {messages: []}).messages.map((d) => d.reason),
         []
       )
       t.end()
@@ -100,7 +108,7 @@ test('with metadata from module (named export)', (t) => {
 
 test('with an unfound module id', (t) => {
   run('00', {options: './missing.js'}, ({err}) => {
-    t.ok(/Cannot find module/.test(err))
+    t.ok(/Cannot find module/.test(String(err)))
     t.end()
   })
 })
@@ -123,7 +131,7 @@ test('with an invalid exports', (t) => {
     ({err}) => {
       t.ok(
         /^TypeError: The "contributors" option must be \(or resolve to\) an array/.test(
-          err
+          String(err)
         )
       )
       t.end()
@@ -132,10 +140,11 @@ test('with an invalid exports', (t) => {
 })
 
 test('with an invalid contributors setting', (t) => {
+  // @ts-expect-error: invalid
   run('00', {options: {contributors: true}}, ({err}) => {
     t.ok(
       /^TypeError: The "contributors" option must be \(or resolve to\) an array/.test(
-        err
+        String(err)
       )
     )
     t.end()
@@ -149,7 +158,7 @@ test('with metadata from module (default export)', (t) => {
     ({file, actual, expected}) => {
       t.is(actual, expected)
       t.deepEqual(
-        file.messages.map((d) => d.reason),
+        (file || {messages: []}).messages.map((d) => d.reason),
         []
       )
       t.end()
@@ -161,7 +170,7 @@ test('without heading', (t) => {
   run('02', {}, ({file, actual, expected}) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map((d) => d.reason),
+      (file || {messages: []}).messages.map((d) => d.reason),
       []
     )
     t.end()
@@ -172,7 +181,7 @@ test('without heading, with `appendIfMissing`', (t) => {
   run('03', {options: {appendIfMissing: true}}, ({file, actual, expected}) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map((d) => d.reason),
+      (file || {messages: []}).messages.map((d) => d.reason),
       ['no social profile for ' + testEmail]
     )
     t.end()
@@ -181,12 +190,11 @@ test('without heading, with `appendIfMissing`', (t) => {
 
 test('with a noreply email', (t) => {
   const email = '944406+wooorm@users.noreply.github.com'
-  const gitUsers = [[testName, email]]
 
-  run('04', {gitUsers}, ({file, actual, expected}) => {
+  run('04', {gitUsers: [[testName, email]]}, ({file, actual, expected}) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map((d) => d.reason),
+      (file || {messages: []}).messages.map((d) => d.reason),
       ['no social profile for ' + email]
     )
     t.end()
@@ -195,9 +203,8 @@ test('with a noreply email', (t) => {
 
 test('ignores greenkeeper email', (t) => {
   const email = 'example@greenkeeper.io'
-  const gitUsers = [[testName, email]]
 
-  run('00', {gitUsers}, ({err}) => {
+  run('00', {gitUsers: [[testName, email]]}, ({err}) => {
     t.ok(
       String(err).startsWith(
         'Error: Missing required `contributors` in settings'
@@ -213,7 +220,7 @@ test('with invalid twitter', (t) => {
   run('00', {options: {contributors}}, ({file, actual, expected}) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map((d) => d.reason),
+      (file || {messages: []}).messages.map((d) => d.reason),
       ['invalid twitter handle for ' + testEmail]
     )
     t.end()
@@ -226,7 +233,7 @@ test('with valid mastodon', (t) => {
   run('05', {options: {contributors}}, ({file, actual, expected}) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map((d) => d.reason),
+      (file || {messages: []}).messages.map((d) => d.reason),
       []
     )
     t.end()
@@ -239,7 +246,7 @@ test('with invalid mastodon', (t) => {
   run('00', {options: {contributors}}, ({file, actual, expected}) => {
     t.is(actual, expected)
     t.deepEqual(
-      file.messages.map((d) => d.reason),
+      (file || {messages: []}).messages.map((d) => d.reason),
       ['invalid mastodon handle for ' + testEmail]
     )
     t.end()
@@ -247,9 +254,7 @@ test('with invalid mastodon', (t) => {
 })
 
 test('with empty email', (t) => {
-  const gitUsers = [[testName, '<>']]
-
-  run('00', {gitUsers}, ({err}) => {
+  run('00', {gitUsers: [[testName, '<>']]}, ({err}) => {
     t.ok(
       String(err).startsWith(
         'Error: Missing required `contributors` in settings'
@@ -260,8 +265,11 @@ test('with empty email', (t) => {
 })
 
 test('multiple authors', (t) => {
+  /** @type {[string, string]} */
   const topContributor = ['Alpha', 'alpha@localhost']
+  /** @type {[string, string]} */
   const otherContributor = ['Bravo', 'bravo@localhost']
+  /** @type {[string, string]} */
   const anotherContributor = ['Charlie', 'charlie@localhost']
   const gitUsers = [
     topContributor,
@@ -280,7 +288,9 @@ test('multiple authors', (t) => {
 })
 
 test('multiple authors with limit', (t) => {
+  /** @type {[string, string]} */
   const topContributor = ['Alpha', 'alpha@localhost']
+  /** @type {[string, string]} */
   const otherContributor = ['Bravo', 'bravo@localhost']
   const gitUsers = [topContributor, topContributor, otherContributor]
 
@@ -292,6 +302,7 @@ test('multiple authors with limit', (t) => {
 
 test('duplicate Git users and contributors', (t) => {
   const email = 'alpha@localhost'
+  /** @type {[string, string][]} */
   const gitUsers = [
     ['A name', email],
     ['Another name', email]
@@ -308,6 +319,7 @@ test('duplicate Git users and contributors', (t) => {
 })
 
 test('no Git', (t) => {
+  /** @type {[string, string][]} */
   const gitUsers = []
 
   run('00', {skipInit: true, gitUsers}, ({err}) => {
@@ -317,12 +329,9 @@ test('no Git', (t) => {
 })
 
 test('no Git users or contributors', (t) => {
-  const gitUsers = []
-  const contributors = []
-
-  run('00', {gitUsers, options: {contributors}}, ({file}) => {
+  run('00', {gitUsers: [], options: {contributors: []}}, ({file}) => {
     t.deepEqual(
-      file.messages.map((d) => d.reason),
+      (file || {messages: []}).messages.map((d) => d.reason),
       ['could not get Git contributors as there are no commits yet']
     )
     t.end()
@@ -367,20 +376,36 @@ test('broken package.json', (t) => {
 })
 
 test('sorts authors with equal commit count by name', (t) => {
-  const gitUsers = [
-    ['y', 'y@test'],
-    ['a', 'a@test'],
-    ['B', 'b@test'],
-    ['z', 'z@test'],
-    ['z', 'z@test']
-  ]
-
-  run('10', {gitUsers}, ({actual, expected}) => {
-    t.is(actual, expected)
-    t.end()
-  })
+  run(
+    '10',
+    {
+      gitUsers: [
+        ['y', 'y@test'],
+        ['a', 'a@test'],
+        ['B', 'b@test'],
+        ['z', 'z@test'],
+        ['z', 'z@test']
+      ]
+    },
+    ({actual, expected}) => {
+      t.is(actual, expected)
+      t.end()
+    }
+  )
 })
 
+/**
+ * @param {string} fixture
+ * @param {object} options_
+ * @param {string} [options_.main]
+ * @param {[string, string][]} [options_.gitUsers]
+ * @param {Person} [options_.pkgAuthor]
+ * @param {Person[]} [options_.pkgContributors]
+ * @param {boolean} [options_.pkgBroken=false]
+ * @param {boolean} [options_.skipInit=false]
+ * @param {Options|string} [options_.options]
+ * @param {(results: {err: Error|null|undefined, file: VFile|undefined, cwd: string, actual: string, expected: string}) => void} test
+ */
 function run(fixture, options_, test) {
   const cwd = temporary()
   const inputFile = path.join('test', 'fixture', fixture + '-input.md')
@@ -395,13 +420,15 @@ function run(fixture, options_, test) {
     execFileSync('git', ['init', '.'], {cwd, stdio: 'ignore'})
   }
 
-  let pkg = JSON.stringify({
-    name: 'example',
-    type: 'module',
-    private: true,
-    author: pkgAuthor,
-    contributors: pkgContributors
-  })
+  let pkg = JSON.stringify(
+    /** @type {PackageJson} */ {
+      name: 'example',
+      type: 'module',
+      private: true,
+      author: pkgAuthor,
+      contributors: pkgContributors
+    }
+  )
 
   if (pkgBroken) {
     pkg = pkg.slice(1)
@@ -441,7 +468,7 @@ function run(fixture, options_, test) {
   const input = readSync(inputFile)
 
   input.path = path.relative('test', inputFile)
-  input.contents = String(input).replace(/\r\n/g, '\n')
+  input.value = String(input).replace(/\r\n/g, '\n')
   input.cwd = cwd
 
   const expected = fs

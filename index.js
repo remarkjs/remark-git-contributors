@@ -1,4 +1,30 @@
+/**
+ * @typedef {import('mdast').Root} Root
+ * @typedef {import('vfile').VFile} VFile
+ * @typedef {import('remark-contributors').Contributor} Contributor
+ * @typedef {import('remark-contributors').ContributorObject} ContributorObject
+ *
+ * @typedef Options
+ *   Configuration.
+ * @property {string|Contributor[]} [contributors]
+ *   List of contributors to inject.
+ *   Defaults to the `contributors` field in the closest `package.json` upwards
+ *   from the processed file, if there is one.
+ *   Supports the string form (`name <email> (url)`) as well.
+ *   Fails if no contributors are found or given.
+ * @property {boolean} [appendIfMissing=false]
+ *   Inject the section if there is none.
+ * @property {string} [cwd]
+ *   Working directory from which to resolve a `contributors` module, if any.
+ * @property {number} [limit=0]
+ *   Limit the rendered contributors.
+ *   A limit of `0` (or lower) includes all contributors.
+ *   If `limit` is given, only the top `<limit>` contributors, sorted by commit
+ *   count, are rendered.
+ */
+
 import path from 'path'
+// @ts-expect-error: untyped.
 import gitContributors from 'contributors-from-git'
 import remarkContributors from 'remark-contributors'
 import {read} from 'to-vfile'
@@ -12,34 +38,60 @@ import {defaultFormatters} from './formatters.js'
 const plugin = 'remark-git-contributors'
 const noreply = '@users.noreply.github.com'
 const headingExpression = /^contributors$/i
+const idFields = ['email', 'name', 'github', 'social.url']
 
-export default function remarkGitContributors(options) {
-  if (typeof options === 'string') {
-    options = {contributors: options}
-  } else if (!options) {
-    options = {}
-  }
+/**
+ * Plugin to inject Git contributors into a markdown table.
+ * Collects contributors from Git history, deduplicates them, augments it with
+ * metadata found in options, a module, or `package.json` and calls
+ * `remark-contributors` to render the markdown table.
+ *
+ * @type {import('unified').Plugin<[(string|Options)?]|void[], Root>}
+ * @returns {(node: Root, file: VFile) => Promise<void>}
+ */
+export default function remarkGitContributors(options = {}) {
+  /**
+   * @typedef {import('type-fest').PackageJson} PackageJson
+   *
+   * @typedef CleanContributor
+   * @property {string} email
+   * @property {number} commits
+   * @property {string} name
+   * @property {string|undefined} github
+   * @property {{url: string, text: string}|undefined} social
+   */
+
+  const settings =
+    typeof options === 'string' ? {contributors: options} : options
 
   return async function (root, file) {
+    let found = false
+
+    headingRange(root, headingExpression, () => {
+      found = true
+    })
+
     // Skip work if there's no Contributors heading.
     // remark-contributors also does this so this is an optimization.
-    if (!hasHeading(root, headingExpression) && !options.appendIfMissing) {
+    if (!found && !settings.appendIfMissing) {
       return
     }
 
-    const cwd = path.resolve(options.cwd || file.cwd)
+    const cwd = path.resolve(settings.cwd || file.cwd)
     // Else is for stdin, typically not used.
     /* c8 ignore next */
     const base = file.dirname ? path.resolve(cwd, file.dirname) : cwd
-    const indices = await indexContributors(cwd, options.contributors)
+    const indices = await indexContributors(cwd, settings.contributors)
     const pkgFile = await findUpOne('package.json', base)
+    /** @type {PackageJson} */
     let pkg = {}
 
     if (pkgFile) {
       await read(pkgFile)
-      pkg = JSON.parse(pkgFile)
+      pkg = JSON.parse(String(pkgFile))
     }
 
+    // @ts-expect-error: indexable.
     indexContributor(indices, pkg.author)
 
     if (Array.isArray(pkg.contributors)) {
@@ -52,15 +104,20 @@ export default function remarkGitContributors(options) {
     await new Promise((resolve, reject) => {
       gitContributors(cwd, ongitcontributors)
 
-      function ongitcontributors(error, contributors) {
+      /**
+       * @param {Error|null} error
+       * @param {Array.<{name: string, email: string, commits: number}>} gitContributors
+       */
+      // eslint-disable-next-line complexity
+      function ongitcontributors(error, gitContributors) {
         if (error) {
-          if (/does not have any commits yet/.test(error)) {
+          if (/does not have any commits yet/.test(String(error))) {
             file.message(
               'could not get Git contributors as there are no commits yet',
-              null,
+              undefined,
               `${plugin}:no-commits`
             )
-            resolve()
+            resolve(undefined)
             return
           }
 
@@ -68,14 +125,23 @@ export default function remarkGitContributors(options) {
           return
         }
 
-        contributors = contributors.map(({name, email, commits}) => {
+        /** @type {Map<string, Map<string, CleanContributor>>} */
+        const idFieldToMap = new Map()
+
+        /** @type {CleanContributor[]} */
+        let contributors = []
+        let index = -1
+
+        while (++index < gitContributors.length) {
+          const {name, email, commits} = gitContributors[index]
+
           if (!email) {
             file.message(
               `no git email for ${name}`,
-              null,
+              undefined,
               `${plugin}:require-git-email`
             )
-            return undefined
+            continue
           }
 
           const metadata =
@@ -94,13 +160,16 @@ export default function remarkGitContributors(options) {
             metadata.github === 'greenkeeper[bot]' ||
             metadata.github === 'greenkeeperio-bot'
           ) {
-            return undefined
+            continue
           }
 
-          let social = null
+          /** @type {CleanContributor['social']} */
+          let social
 
           if (metadata.twitter) {
-            const handle = metadata.twitter.split(/@|\//).pop().trim()
+            const handle = (
+              String(metadata.twitter).split(/@|\//).pop() || ''
+            ).trim()
 
             if (handle) {
               social = {
@@ -110,12 +179,12 @@ export default function remarkGitContributors(options) {
             } else {
               file.message(
                 `invalid twitter handle for ${email}`,
-                null,
+                undefined,
                 `${plugin}:valid-twitter`
               )
             }
           } else if (metadata.mastodon) {
-            const array = metadata.mastodon.split('@').filter(Boolean)
+            const array = String(metadata.mastodon).split('@').filter(Boolean)
             const handle = array[0]
             const domain = array[1]
 
@@ -127,52 +196,84 @@ export default function remarkGitContributors(options) {
             } else {
               file.message(
                 `invalid mastodon handle for ${email}`,
-                null,
+                undefined,
                 `${plugin}:valid-mastodon`
               )
             }
           } else {
             file.info(
               `no social profile for ${email}`,
-              null,
+              undefined,
               `${plugin}:social`
             )
           }
 
-          return {
+          /** @type {CleanContributor} */
+          const contributor = {
             email,
             commits,
-            name: metadata.name || name,
-            github: metadata.github,
+            name: String(metadata.name || name),
+            github: String(metadata.github || '') || undefined,
             social
           }
-        })
+          // Whether an existing contributor was found that matched an id field.
+          let found = false
+          let idIndex = -1
 
-        contributors = contributors
-          .filter(Boolean)
-          .reduce(dedup(['email', 'name', 'github', 'social.url']), [])
-          .sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name))
+          while (++idIndex < idFields.length) {
+            const idField = idFields[idIndex]
+            /** @type {unknown} */
+            const id = dlv(contributor, idField)
 
-        if (options.limit && options.limit > 0) {
-          contributors = contributors.slice(0, options.limit)
+            if (typeof id === 'string') {
+              let idToContributor = idFieldToMap.get(idField)
+
+              if (!idToContributor) {
+                idToContributor = new Map()
+                idFieldToMap.set(idField, idToContributor)
+              }
+
+              const existingContributor = idToContributor.get(id)
+
+              if (existingContributor) {
+                existingContributor.commits += contributor.commits
+                found = true
+                break
+              }
+
+              idToContributor.set(id, contributor)
+            }
+          }
+
+          if (!found) {
+            contributors.push(contributor)
+          }
+        }
+
+        contributors.sort(
+          (a, b) => b.commits - a.commits || a.name.localeCompare(b.name)
+        )
+
+        if (settings.limit && settings.limit > 0) {
+          contributors = contributors.slice(0, settings.limit)
         }
 
         const formatters = Object.assign({}, defaultFormatters)
 
         // Exclude GitHub column if all cells would be empty
         if (contributors.every((c) => !c.github)) {
-          formatters.github = false
+          formatters.github = {exclude: true}
         }
 
         // Exclude Social column if all cells would be empty
         if (contributors.every((c) => !c.social)) {
-          formatters.social = false
+          formatters.social = {exclude: true}
         }
 
         remarkContributors({
           contributors,
           formatters,
-          appendIfMissing: options.appendIfMissing,
+          appendIfMissing: settings.appendIfMissing,
           align: 'left'
         })(root, file).then(resolve, reject)
       }
@@ -180,56 +281,23 @@ export default function remarkGitContributors(options) {
   }
 }
 
-function dedup(keys) {
-  const map = new Map(keys.map((key) => [key, new Map()]))
-
-  return function (acc, contributor) {
-    for (const key of keys) {
-      const value = dlv(contributor, key)
-
-      if (value) {
-        const index = map.get(key)
-
-        if (index.has(value)) {
-          index.get(value).commits += contributor.commits
-          return acc
-        }
-
-        index.set(value, contributor)
-      }
-    }
-
-    acc.push(contributor)
-    return acc
-  }
-}
-
-function hasHeading(tree, test) {
-  let found = false
-
-  headingRange(tree, test, () => {
-    found = true
-  })
-
-  return found
-}
-
+/**
+ * @param {string} cwd
+ * @param {Contributor[]|string|undefined} contributors
+ */
 async function indexContributors(cwd, contributors) {
-  const indices = {
-    email: {},
-    github: {},
-    name: {}
-  }
+  /** @type {Record<string, Record<string, ContributorObject>>} */
+  const indices = {email: {}, github: {}, name: {}}
 
   if (contributors === null || contributors === undefined) {
     return indices
   }
 
   if (typeof contributors === 'string') {
-    const exported = await loadPlugin(contributors, {
-      cwd: [cwd, process.cwd()],
-      key: false
-    })
+    const exported =
+      /** @type {{contributors?: Contributor[], default?: Contributor[]}} */ (
+        await loadPlugin(contributors, {cwd: [cwd, process.cwd()], key: false})
+      )
 
     if (Array.isArray(exported.contributors)) {
       contributors = exported.contributors
@@ -251,25 +319,42 @@ async function indexContributors(cwd, contributors) {
   return indices
 }
 
+/**
+ * @param {Record<string, Record<string, ContributorObject>>} indices
+ * @param {Contributor} contributor
+ */
 function indexContributor(indices, contributor) {
-  contributor =
+  /** @type {ContributorObject} */
+  // @ts-expect-error: `parseAuthor` result is indexable.
+  const contributorObject =
     typeof contributor === 'string'
       ? parseAuthor(contributor)
       : Object.assign({}, contributor)
 
-  const emails = (contributor.emails || []).concat(contributor.email || [])
+  /** @type {unknown[]} */
+  // @ts-expect-error: assume array.
+  const emails = [...(contributorObject.emails || [])]
 
-  for (const email of emails) {
-    indexValue(indices.email, email, contributor)
+  if (contributorObject.email) {
+    emails.push(contributorObject.email)
   }
 
-  indexValue(indices.github, contributor.github, contributor)
-  indexValue(indices.name, contributor.name, contributor)
+  for (const email of emails) {
+    indexValue(indices.email, email, contributorObject)
+  }
+
+  indexValue(indices.github, contributorObject.github, contributorObject)
+  indexValue(indices.name, contributorObject.name, contributorObject)
 }
 
-function indexValue(index, value, contributor) {
-  if (value) {
-    value = value.toLowerCase()
+/**
+ * @param {Record<string, ContributorObject>} index
+ * @param {unknown} raw
+ * @param {ContributorObject} contributor
+ */
+function indexValue(index, raw, contributor) {
+  if (raw) {
+    const value = String(raw).toLowerCase()
 
     if (index[value]) {
       // Merge in place
