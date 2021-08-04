@@ -2,8 +2,8 @@ import test from 'tape'
 import fs from 'fs'
 import path from 'path'
 import {readSync} from 'to-vfile'
-import remark from 'remark'
-import gfm from 'remark-gfm'
+import {remark} from 'remark'
+import remarkGfm from 'remark-gfm'
 import tmpgen from 'tmpgen'
 import {execFileSync} from 'child_process'
 import remarkGitContributors from '../index.js'
@@ -445,7 +445,7 @@ function run(fixture, options_, test) {
     .replace(/\r\n/g, '\n')
 
   remark()
-    .use(gfm)
+    .use(remarkGfm)
     .use(remarkGitContributors, options)
     .process(input, (error, file) => {
       const actual = String(file).trim()
