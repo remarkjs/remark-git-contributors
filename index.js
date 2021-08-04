@@ -43,7 +43,10 @@ export default function remarkGitContributors(options) {
     indexContributor(indices, pkg.author)
 
     if (Array.isArray(pkg.contributors)) {
-      pkg.contributors.forEach(indexContributor.bind(null, indices))
+      let index = -1
+      while (++index < pkg.contributors.length) {
+        indexContributor(indices, pkg.contributors[index])
+      }
     }
 
     await new Promise((resolve, reject) => {
@@ -210,7 +213,7 @@ function dedup(keys) {
 function hasHeading(tree, test) {
   let found = false
 
-  headingRange(tree, test, function () {
+  headingRange(tree, test, () => {
     found = true
   })
 

@@ -14,7 +14,7 @@ const testName = 'test'
 const testEmail = 'test@localhost'
 const testUrl = 'https://localhost'
 
-test('basic', function (t) {
+test('basic', (t) => {
   run('00', {}, ({file, actual, expected}) => {
     t.is(actual, expected)
     t.deepEqual(
@@ -25,7 +25,7 @@ test('basic', function (t) {
   })
 })
 
-test('with metadata as strings', function (t) {
+test('with metadata as strings', (t) => {
   run(
     '00',
     {main: 'contributors-string.js', options: '.'},
@@ -40,7 +40,7 @@ test('with metadata as strings', function (t) {
   )
 })
 
-test('with duplicate metadata', function (t) {
+test('with duplicate metadata', (t) => {
   run(
     '00',
     {main: 'contributors-duplicates.js', options: '.'},
@@ -55,7 +55,7 @@ test('with duplicate metadata', function (t) {
   )
 })
 
-test('with metadata', function (t) {
+test('with metadata', (t) => {
   const contributors = [{email: testEmail, github: 'test', twitter: 'test'}]
 
   run('01', {options: {contributors}}, ({file, actual, expected}) => {
@@ -68,7 +68,7 @@ test('with metadata', function (t) {
   })
 })
 
-test('with metadata from module (main export)', function (t) {
+test('with metadata from module (main export)', (t) => {
   run(
     '01',
     {main: 'contributors-main.js', options: '.'},
@@ -83,7 +83,7 @@ test('with metadata from module (main export)', function (t) {
   )
 })
 
-test('with metadata from module (named export)', function (t) {
+test('with metadata from module (named export)', (t) => {
   run(
     '01',
     {main: 'contributors-named.js', options: '.'},
@@ -98,25 +98,25 @@ test('with metadata from module (named export)', function (t) {
   )
 })
 
-test('with an unfound module id', function (t) {
-  run('00', {options: 'missing.js'}, function ({err}) {
+test('with an unfound module id', (t) => {
+  run('00', {options: 'missing.js'}, ({err}) => {
     t.ok(/^Error: Cannot find module 'missing.js'/.test(err))
     t.end()
   })
 })
 
-test('with a throwing module', function (t) {
-  run('00', {main: 'contributors-throwing.js', options: '.'}, function ({err}) {
+test('with a throwing module', (t) => {
+  run('00', {main: 'contributors-throwing.js', options: '.'}, ({err}) => {
     t.ok(String(err).startsWith('Error: Some error!'))
     t.end()
   })
 })
 
-test('with an invalid exports', function (t) {
+test('with an invalid exports', (t) => {
   run(
     '00',
     {main: 'contributors-invalid-exports.js', options: '.'},
-    function ({err}) {
+    ({err}) => {
       t.ok(
         /^TypeError: The "contributors" option must be \(or resolve to\) an array/.test(
           err
@@ -127,8 +127,8 @@ test('with an invalid exports', function (t) {
   )
 })
 
-test('with an invalid contributors setting', function (t) {
-  run('00', {options: {contributors: true}}, function ({err}) {
+test('with an invalid contributors setting', (t) => {
+  run('00', {options: {contributors: true}}, ({err}) => {
     t.ok(
       /^TypeError: The "contributors" option must be \(or resolve to\) an array/.test(
         err
@@ -138,7 +138,7 @@ test('with an invalid contributors setting', function (t) {
   })
 })
 
-test('with metadata from module (default export)', function (t) {
+test('with metadata from module (default export)', (t) => {
   run(
     '01',
     {main: 'contributors-default.js', options: '.'},
@@ -153,7 +153,7 @@ test('with metadata from module (default export)', function (t) {
   )
 })
 
-test('without heading', function (t) {
+test('without heading', (t) => {
   run('02', {}, ({file, actual, expected}) => {
     t.is(actual, expected)
     t.deepEqual(
@@ -164,7 +164,7 @@ test('without heading', function (t) {
   })
 })
 
-test('without heading, with `appendIfMissing`', function (t) {
+test('without heading, with `appendIfMissing`', (t) => {
   run('03', {options: {appendIfMissing: true}}, ({file, actual, expected}) => {
     t.is(actual, expected)
     t.deepEqual(
@@ -175,7 +175,7 @@ test('without heading, with `appendIfMissing`', function (t) {
   })
 })
 
-test('with a noreply email', function (t) {
+test('with a noreply email', (t) => {
   const email = '944406+wooorm@users.noreply.github.com'
   const gitUsers = [[testName, email]]
 
@@ -189,11 +189,11 @@ test('with a noreply email', function (t) {
   })
 })
 
-test('ignores greenkeeper email', function (t) {
+test('ignores greenkeeper email', (t) => {
   const email = 'example@greenkeeper.io'
   const gitUsers = [[testName, email]]
 
-  run('00', {gitUsers}, function ({err}) {
+  run('00', {gitUsers}, ({err}) => {
     t.ok(
       String(err).startsWith(
         'Error: Missing required `contributors` in settings'
@@ -203,7 +203,7 @@ test('ignores greenkeeper email', function (t) {
   })
 })
 
-test('with invalid twitter', function (t) {
+test('with invalid twitter', (t) => {
   const contributors = [{email: testEmail, twitter: '@'}]
 
   run('00', {options: {contributors}}, ({file, actual, expected}) => {
@@ -216,7 +216,7 @@ test('with invalid twitter', function (t) {
   })
 })
 
-test('with valid mastodon', function (t) {
+test('with valid mastodon', (t) => {
   const contributors = [{email: testEmail, mastodon: '@foo@bar.com'}]
 
   run('05', {options: {contributors}}, ({file, actual, expected}) => {
@@ -229,7 +229,7 @@ test('with valid mastodon', function (t) {
   })
 })
 
-test('with invalid mastodon', function (t) {
+test('with invalid mastodon', (t) => {
   const contributors = [{email: testEmail, mastodon: '@foo'}]
 
   run('00', {options: {contributors}}, ({file, actual, expected}) => {
@@ -242,7 +242,7 @@ test('with invalid mastodon', function (t) {
   })
 })
 
-test('with empty email', function (t) {
+test('with empty email', (t) => {
   const gitUsers = [[testName, '<>']]
 
   run('00', {gitUsers}, ({err}) => {
@@ -255,7 +255,7 @@ test('with empty email', function (t) {
   })
 })
 
-test('multiple authors', function (t) {
+test('multiple authors', (t) => {
   const topContributor = ['Alpha', 'alpha@localhost']
   const otherContributor = ['Bravo', 'bravo@localhost']
   const anotherContributor = ['Charlie', 'charlie@localhost']
@@ -275,7 +275,7 @@ test('multiple authors', function (t) {
   })
 })
 
-test('multiple authors with limit', function (t) {
+test('multiple authors with limit', (t) => {
   const topContributor = ['Alpha', 'alpha@localhost']
   const otherContributor = ['Bravo', 'bravo@localhost']
   const gitUsers = [topContributor, topContributor, otherContributor]
@@ -286,7 +286,7 @@ test('multiple authors with limit', function (t) {
   })
 })
 
-test('duplicate Git users and contributors', function (t) {
+test('duplicate Git users and contributors', (t) => {
   const email = 'alpha@localhost'
   const gitUsers = [
     ['A name', email],
@@ -303,7 +303,7 @@ test('duplicate Git users and contributors', function (t) {
   })
 })
 
-test('no Git', function (t) {
+test('no Git', (t) => {
   const gitUsers = []
 
   run('00', {skipInit: true, gitUsers}, ({err}) => {
@@ -312,7 +312,7 @@ test('no Git', function (t) {
   })
 })
 
-test('no Git users or contributors', function (t) {
+test('no Git users or contributors', (t) => {
   const gitUsers = []
   const contributors = []
 
@@ -325,7 +325,7 @@ test('no Git users or contributors', function (t) {
   })
 })
 
-test('package.json author', function (t) {
+test('package.json author', (t) => {
   const pkgAuthor = {
     name: testName,
     email: testEmail,
@@ -339,7 +339,7 @@ test('package.json author', function (t) {
   })
 })
 
-test('package.json contributors', function (t) {
+test('package.json contributors', (t) => {
   const pkgContributors = [
     {
       name: testName,
@@ -355,14 +355,14 @@ test('package.json contributors', function (t) {
   })
 })
 
-test('broken package.json', function (t) {
+test('broken package.json', (t) => {
   run('00', {pkgBroken: true}, ({err}) => {
     t.ok(String(err).startsWith('SyntaxError: Unexpected token'))
     t.end()
   })
 })
 
-test('sorts authors with equal commit count by name', function (t) {
+test('sorts authors with equal commit count by name', (t) => {
   const gitUsers = [
     ['y', 'y@test'],
     ['a', 'a@test'],
@@ -406,7 +406,9 @@ function run(fixture, options_, test) {
     fs.writeFileSync(path.join(cwd, 'package.json'), pkg)
   }
 
-  gitUsers.forEach(function ([name, email], index) {
+  let index = -1
+  while (++index < gitUsers.length) {
+    const [name, email] = gitUsers[index]
     execFileSync('git', ['config', 'user.name', name], {
       cwd,
       stdio: 'ignore'
@@ -431,7 +433,7 @@ function run(fixture, options_, test) {
       cwd,
       stdio: 'ignore'
     })
-  })
+  }
 
   const input = readSync(inputFile)
 
