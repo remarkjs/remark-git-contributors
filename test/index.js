@@ -1,14 +1,14 @@
-'use strict'
+import test from 'tape'
+import fs from 'fs'
+import path from 'path'
+import vfile from 'to-vfile'
+import remark from 'remark'
+import gfm from 'remark-gfm'
+import tmpgen from 'tmpgen'
+import {execFileSync} from 'child_process'
+import remarkGitContributors from '../index.js'
 
-const test = require('tape')
-const fs = require('fs')
-const path = require('path')
-const vfile = require('to-vfile')
-const remark = require('remark')
-const gfm = require('remark-gfm')
-const temporary = require('tmpgen')('remark-git-contributors/*')
-const execFileSync = require('child_process').execFileSync
-const plugin = require('..')
+const temporary = tmpgen('remark-git-contributors/*')
 
 const testName = 'test'
 const testEmail = 'test@localhost'
@@ -379,10 +379,10 @@ test('sorts authors with equal commit count by name', function (t) {
 
 function run(fixture, options_, test) {
   const cwd = temporary()
-  const inputFile = path.join(__dirname, 'fixture', fixture + '-input.md')
-  const outputFile = path.join(__dirname, 'fixture', fixture + '-output.md')
+  const inputFile = path.join('test', 'fixture', fixture + '-input.md')
+  const outputFile = path.join('test', 'fixture', fixture + '-output.md')
   const main = options_.main
-    ? fs.readFileSync(path.join(__dirname, 'fixture', options_.main), 'utf8')
+    ? fs.readFileSync(path.join('test', 'fixture', options_.main), 'utf8')
     : ''
   const gitUsers = options_.gitUsers || [[testName, testEmail]]
   const {pkgAuthor, pkgContributors, pkgBroken, options} = options_
@@ -435,7 +435,7 @@ function run(fixture, options_, test) {
 
   const input = vfile.readSync(inputFile)
 
-  input.path = path.relative(__dirname, inputFile)
+  input.path = path.relative('test', inputFile)
   input.contents = String(input).replace(/\r\n/g, '\n')
   input.cwd = cwd
 
@@ -446,7 +446,7 @@ function run(fixture, options_, test) {
 
   remark()
     .use(gfm)
-    .use(plugin, options)
+    .use(remarkGitContributors, options)
     .process(input, (error, file) => {
       const actual = String(file).trim()
       test({err: error, file, cwd, actual, expected})

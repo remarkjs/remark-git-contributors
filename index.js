@@ -1,210 +1,187 @@
-'use strict'
+import gitContributors from 'contributors-from-git'
+import injectContributors from 'remark-contributors'
+import vfile from 'to-vfile'
+import {findUpOne} from 'vfile-find-up'
+import resolve from 'resolve'
+import heading from 'mdast-util-heading-range'
+import parseAuthor from 'parse-author'
+import deep from 'deep-dot'
+import path from 'path'
+import {defaultFormatters} from './formatters.js'
 
-const gitContributors = require('contributors-from-git')
-const injectContributors = require('remark-contributors')
-const vfile = require('to-vfile')
-const findUp = require('vfile-find-up')
-const resolve = require('resolve')
-const heading = require('mdast-util-heading-range')
-const parseAuthor = require('parse-author')
-const deep = require('deep-dot')
-const path = require('path')
-const plugin = require('./package.json').name
-const defaultFormatters = require('./formatters.js')
-
+const plugin = 'remark-git-contributors'
 const noreply = '@users.noreply.github.com'
-
 const headingExpression = /^contributors$/i
 
-module.exports = function (options) {
+export default function remarkGitContributors(options) {
   if (typeof options === 'string') {
     options = {contributors: options}
   } else if (!options) {
     options = {}
   }
 
-  return function (root, file, callback) {
+  return async function (root, file) {
     // Skip work if there's no Contributors heading.
     // remark-contributors also does this so this is an optimization.
     if (!hasHeading(root, headingExpression) && !options.appendIfMissing) {
-      return process.nextTick(callback)
+      return
     }
 
     const cwd = path.resolve(options.cwd || file.cwd)
     // Else is for stdin, typically not used.
     /* c8 ignore next */
     const base = file.dirname ? path.resolve(cwd, file.dirname) : cwd
-    let indices
+    const indices = await indexContributors(cwd, options.contributors)
+    const pkgFile = await findUpOne('package.json', base)
+    let pkg = {}
 
-    try {
-      indices = indexContributors(cwd, options.contributors)
-    } catch (error) {
-      return process.nextTick(callback, error)
+    if (pkgFile) {
+      await vfile.read(pkgFile)
+      // To do: remove when `vfile` is updated.
+      pkgFile.value = pkgFile.contents
+      pkg = JSON.parse(pkgFile)
     }
 
-    findUp.one('package.json', base, onfoundpackage)
+    indexContributor(indices, pkg.author)
 
-    function onfoundpackage(error, file) {
-      // `find-up` currently never passes errors.
-      /* c8 ignore next 3 */
-      if (error) {
-        callback(error)
-      } else if (file) {
-        vfile.read(file, onreadpackage)
-      } else {
-        onpackage({})
-      }
+    if (Array.isArray(pkg.contributors)) {
+      pkg.contributors.forEach(indexContributor.bind(null, indices))
     }
 
-    function onreadpackage(error, file) {
-      let pkg
-
-      // Files that are found but cannot be read are hard to test.
-      /* c8 ignore next 3 */
-      if (error) {
-        return callback(error)
-      }
-
-      try {
-        pkg = JSON.parse(file)
-      } catch (error) {
-        return callback(error)
-      }
-
-      onpackage(pkg)
-    }
-
-    function onpackage(pkg) {
-      indexContributor(indices, pkg.author)
-
-      if (Array.isArray(pkg.contributors)) {
-        pkg.contributors.forEach(indexContributor.bind(null, indices))
-      }
-
+    await new Promise((resolve, reject) => {
       gitContributors(cwd, ongitcontributors)
-    }
 
-    function ongitcontributors(error, contributors) {
-      if (error) {
-        if (/does not have any commits yet/.test(error)) {
-          file.message(
-            'could not get Git contributors as there are no commits yet',
-            null,
-            `${plugin}:no-commits`
-          )
-          callback()
+      function ongitcontributors(error, contributors) {
+        if (error) {
+          if (/does not have any commits yet/.test(error)) {
+            file.message(
+              'could not get Git contributors as there are no commits yet',
+              null,
+              `${plugin}:no-commits`
+            )
+            resolve()
+            return
+          }
+
+          reject(new Error('Could not get Git contributors: ' + error.message))
           return
         }
 
-        return callback(
-          new Error('Could not get Git contributors: ' + error.message)
-        )
-      }
+        contributors = contributors.map(({name, email, commits}) => {
+          if (!email) {
+            file.message(
+              `no git email for ${name}`,
+              null,
+              `${plugin}:require-git-email`
+            )
+            return undefined
+          }
 
-      contributors = contributors.map(({name, email, commits}) => {
-        if (!email) {
-          file.message(
-            `no git email for ${name}`,
-            null,
-            `${plugin}:require-git-email`
-          )
-          return undefined
-        }
+          const metadata =
+            indices.email[email] || indices.name[name.toLowerCase()] || {}
 
-        const metadata =
-          indices.email[email] || indices.name[name.toLowerCase()] || {}
+          if (email.endsWith(noreply)) {
+            metadata.github = email
+              .slice(0, -noreply.length)
+              .replace(/^\d+\+/, '')
+            indexValue(indices.github, metadata.github, metadata)
+          }
 
-        if (email.endsWith(noreply)) {
-          metadata.github = email
-            .slice(0, -noreply.length)
-            .replace(/^\d+\+/, '')
-          indexValue(indices.github, metadata.github, metadata)
-        }
+          if (
+            email.endsWith('@greenkeeper.io') ||
+            name === 'Greenkeeper' ||
+            metadata.github === 'greenkeeper[bot]' ||
+            metadata.github === 'greenkeeperio-bot'
+          ) {
+            return undefined
+          }
 
-        if (
-          email.endsWith('@greenkeeper.io') ||
-          name === 'Greenkeeper' ||
-          metadata.github === 'greenkeeper[bot]' ||
-          metadata.github === 'greenkeeperio-bot'
-        ) {
-          return undefined
-        }
+          let social = null
 
-        let social = null
+          if (metadata.twitter) {
+            const handle = metadata.twitter.split(/@|\//).pop().trim()
 
-        if (metadata.twitter) {
-          const handle = metadata.twitter.split(/@|\//).pop().trim()
+            if (handle) {
+              social = {
+                url: 'https://twitter.com/' + handle,
+                text: '@' + handle + '@twitter'
+              }
+            } else {
+              file.message(
+                `invalid twitter handle for ${email}`,
+                null,
+                `${plugin}:valid-twitter`
+              )
+            }
+          } else if (metadata.mastodon) {
+            const array = metadata.mastodon.split('@').filter(Boolean)
+            const handle = array[0]
+            const domain = array[1]
 
-          if (handle) {
-            social = {
-              url: 'https://twitter.com/' + handle,
-              text: '@' + handle + '@twitter'
+            if (handle && domain) {
+              social = {
+                url: 'https://' + domain + '/@' + handle,
+                text: '@' + handle + '@' + domain
+              }
+            } else {
+              file.message(
+                `invalid mastodon handle for ${email}`,
+                null,
+                `${plugin}:valid-mastodon`
+              )
             }
           } else {
-            file.message(
-              `invalid twitter handle for ${email}`,
+            file.info(
+              `no social profile for ${email}`,
               null,
-              `${plugin}:valid-twitter`
+              `${plugin}:social`
             )
           }
-        } else if (metadata.mastodon) {
-          const array = metadata.mastodon.split('@').filter(Boolean)
-          const handle = array[0]
-          const domain = array[1]
 
-          if (handle && domain) {
-            social = {
-              url: 'https://' + domain + '/@' + handle,
-              text: '@' + handle + '@' + domain
-            }
+          return {
+            email,
+            commits,
+            name: metadata.name || name,
+            github: metadata.github,
+            social
+          }
+        })
+
+        contributors = contributors
+          .filter(Boolean)
+          .reduce(dedup(['email', 'name', 'github', 'social.url']), [])
+          .sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name))
+
+        if (options.limit && options.limit > 0) {
+          contributors = contributors.slice(0, options.limit)
+        }
+
+        const formatters = Object.assign({}, defaultFormatters)
+
+        // Exclude GitHub column if all cells would be empty
+        if (contributors.every((c) => !c.github)) {
+          formatters.github = false
+        }
+
+        // Exclude Social column if all cells would be empty
+        if (contributors.every((c) => !c.social)) {
+          formatters.social = false
+        }
+
+        injectContributors({
+          contributors,
+          formatters,
+          appendIfMissing: options.appendIfMissing,
+          align: 'left'
+        })(root, file, (error) => {
+          if (error) {
+            reject(error)
           } else {
-            file.message(
-              `invalid mastodon handle for ${email}`,
-              null,
-              `${plugin}:valid-mastodon`
-            )
+            resolve()
           }
-        } else {
-          file.info(`no social profile for ${email}`, null, `${plugin}:social`)
-        }
-
-        return {
-          email,
-          commits,
-          name: metadata.name || name,
-          github: metadata.github,
-          social
-        }
-      })
-
-      contributors = contributors
-        .filter(Boolean)
-        .reduce(dedup(['email', 'name', 'github', 'social.url']), [])
-        .sort((a, b) => b.commits - a.commits || a.name.localeCompare(b.name))
-
-      if (options.limit && options.limit > 0) {
-        contributors = contributors.slice(0, options.limit)
+        })
       }
-
-      const formatters = Object.assign({}, defaultFormatters)
-
-      // Exclude GitHub column if all cells would be empty
-      if (contributors.every((c) => !c.github)) {
-        formatters.github = false
-      }
-
-      // Exclude Social column if all cells would be empty
-      if (contributors.every((c) => !c.social)) {
-        formatters.social = false
-      }
-
-      injectContributors({
-        contributors,
-        formatters,
-        appendIfMissing: options.appendIfMissing,
-        align: 'left'
-      })(root, file, callback)
-    }
+    })
   }
 }
 
@@ -242,7 +219,7 @@ function hasHeading(tree, test) {
   return found
 }
 
-function indexContributors(cwd, contributors) {
+async function indexContributors(cwd, contributors) {
   const indices = {
     email: {},
     github: {},
@@ -267,7 +244,7 @@ function indexContributors(cwd, contributors) {
       path = resolve.sync(contributors, {basedir: process.cwd()})
     }
 
-    const exported = require(path)
+    const exported = (await import(path)).default
 
     if (Array.isArray(exported)) {
       contributors = exported

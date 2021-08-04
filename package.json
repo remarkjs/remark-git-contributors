@@ -40,6 +40,9 @@
       "twitter": "wooorm"
     }
   ],
+  "sideEffects": false,
+  "type": "module",
+  "main": "index.js",
   "files": [
     "formatters.js",
     "index.js"
@@ -52,7 +55,7 @@
     "remark-contributors": "^5.0.0",
     "resolve": "^1.8.1",
     "to-vfile": "^6.1.0",
-    "vfile-find-up": "^5.0.0"
+    "vfile-find-up": "^6.0.0"
   },
   "devDependencies": {
     "c8": "^7.0.0",
@@ -95,7 +98,7 @@
           "heading": "contents"
         }
       ],
-      "."
+      "./index.js"
     ]
   }
 }
