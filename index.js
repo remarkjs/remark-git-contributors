@@ -1,9 +1,9 @@
 import gitContributors from 'contributors-from-git'
 import injectContributors from 'remark-contributors'
-import vfile from 'to-vfile'
+import {read} from 'to-vfile'
 import {findUpOne} from 'vfile-find-up'
 import resolve from 'resolve'
-import heading from 'mdast-util-heading-range'
+import {headingRange} from 'mdast-util-heading-range'
 import parseAuthor from 'parse-author'
 import deep from 'deep-dot'
 import path from 'path'
@@ -36,9 +36,7 @@ export default function remarkGitContributors(options) {
     let pkg = {}
 
     if (pkgFile) {
-      await vfile.read(pkgFile)
-      // To do: remove when `vfile` is updated.
-      pkgFile.value = pkgFile.contents
+      await read(pkgFile)
       pkg = JSON.parse(pkgFile)
     }
 
@@ -212,7 +210,7 @@ function dedup(keys) {
 function hasHeading(tree, test) {
   let found = false
 
-  heading(tree, test, function () {
+  headingRange(tree, test, function () {
     found = true
   })
 

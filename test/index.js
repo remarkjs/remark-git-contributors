@@ -1,7 +1,7 @@
 import test from 'tape'
 import fs from 'fs'
 import path from 'path'
-import vfile from 'to-vfile'
+import {readSync} from 'to-vfile'
 import remark from 'remark'
 import gfm from 'remark-gfm'
 import tmpgen from 'tmpgen'
@@ -433,7 +433,7 @@ function run(fixture, options_, test) {
     })
   })
 
-  const input = vfile.readSync(inputFile)
+  const input = readSync(inputFile)
 
   input.path = path.relative('test', inputFile)
   input.contents = String(input).replace(/\r\n/g, '\n')
