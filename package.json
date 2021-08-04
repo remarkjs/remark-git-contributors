@@ -49,7 +49,7 @@
   ],
   "dependencies": {
     "contributors-from-git": "^1.0.0",
-    "deep-dot": "0.0.2",
+    "dlv": "^1.0.0",
     "mdast-util-heading-range": "^3.0.0",
     "parse-author": "^2.0.0",
     "remark-contributors": "^5.0.0",

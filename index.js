@@ -1,3 +1,4 @@
+import path from 'path'
 import gitContributors from 'contributors-from-git'
 import injectContributors from 'remark-contributors'
 import {read} from 'to-vfile'
@@ -5,8 +6,7 @@ import {findUpOne} from 'vfile-find-up'
 import resolve from 'resolve'
 import {headingRange} from 'mdast-util-heading-range'
 import parseAuthor from 'parse-author'
-import deep from 'deep-dot'
-import path from 'path'
+import dlv from 'dlv'
 import {defaultFormatters} from './formatters.js'
 
 const plugin = 'remark-git-contributors'
@@ -191,7 +191,7 @@ function dedup(keys) {
 
   return function (acc, contributor) {
     for (const key of keys) {
-      const value = deep(contributor, key)
+      const value = dlv(contributor, key)
 
       if (value) {
         const index = map.get(key)
