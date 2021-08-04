@@ -5,15 +5,15 @@
  * @typedef {import('../index.js').Options} Options
  */
 
+import fs from 'node:fs'
+import path from 'node:path'
+import {execFileSync} from 'node:child_process'
 import test from 'tape'
-import fs from 'fs'
-import path from 'path'
 import {readSync} from 'to-vfile'
 import {remark} from 'remark'
 import remarkGfm from 'remark-gfm'
 // @ts-expect-error: untyped.
 import tmpgen from 'tmpgen'
-import {execFileSync} from 'child_process'
 import remarkGitContributors from '../index.js'
 
 const temporary = tmpgen('remark-git-contributors/*')

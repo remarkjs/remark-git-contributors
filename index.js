@@ -23,7 +23,8 @@
  *   count, are rendered.
  */
 
-import path from 'path'
+import process from 'node:process'
+import path from 'node:path'
 // @ts-expect-error: untyped.
 import gitContributors from 'contributors-from-git'
 import remarkContributors from 'remark-contributors'

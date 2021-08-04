@@ -63,8 +63,8 @@
     "vfile-find-up": "^6.0.0"
   },
   "devDependencies": {
-    "@types/dlv": "^1.1.2",
-    "@types/parse-author": "^2.0.1",
+    "@types/dlv": "^1.0.0",
+    "@types/parse-author": "^2.0.0",
     "@types/tape": "^4.0.0",
     "c8": "^7.0.0",
     "prettier": "^2.0.0",
@@ -76,9 +76,9 @@
     "tape": "^5.0.0",
     "tmpgen": "^1.0.0",
     "type-coverage": "^2.0.0",
-    "type-fest": "^1.3.0",
+    "type-fest": "^1.0.0",
     "typescript": "^4.0.0",
-    "xo": "^0.39.0"
+    "xo": "^0.43.0"
   },
   "scripts": {
     "build": "rimraf \"*.d.ts\" \"test/**/*.d.ts\" && tsc && type-coverage",
