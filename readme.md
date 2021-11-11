@@ -3,8 +3,6 @@
 [![Version][version-badge]][version]
 [![Build][build-badge]][build]
 [![Coverage][coverage-badge]][coverage]
-[![Dependencies][dependencies-badge]][dependencies]
-[![JavaScript Style Guide][standard-badge]][standard]
 [![Downloads][downloads-badge]][downloads]
 [![Size][size-badge]][size]
 [![Sponsors][sponsors-badge]][collective]
@@ -243,14 +241,6 @@ abide by its terms.
 [coverage-badge]: https://img.shields.io/codecov/c/github/remarkjs/remark-git-contributors.svg
 
 [coverage]: https://codecov.io/github/remarkjs/remark-git-contributors
-
-[dependencies-badge]: https://img.shields.io/david/remarkjs/remark-git-contributors.svg
-
-[dependencies]: https://david-dm.org/remarkjs/remark-git-contributors
-
-[standard-badge]: https://img.shields.io/badge/code_style-standard-brightgreen.svg
-
-[standard]: https://standardjs.com
 
 [downloads-badge]: https://img.shields.io/npm/dm/remark-git-contributors.svg
 
