@@ -197,7 +197,7 @@ Some text.
 You can now use the CLI to format `example.md`:
 
 ```sh
-./node_modules/.bin/remark --output --use remark-gfm --use remark-git-contributors example.md
+npx remark --output --use remark-gfm --use remark-git-contributors example.md
 ```
 
 This adds the table of contributors to `example.md`, which now contains (when
