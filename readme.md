@@ -300,7 +300,7 @@ Or on the CLI (in `package.json`):
 
 ### Example: metadata
 
-The data gathered from Git is somewhat sparse, only name and email.
+The data gathered from Git is only includes names and emails.
 To add more metadata, either add it to `package.json` (used in this project’s
 [`package.json`][package-json]) or configure `options.contributors`.
 On the API, that’s done like so:
