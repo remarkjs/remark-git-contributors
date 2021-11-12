@@ -299,7 +299,7 @@ Or on the CLI (in `package.json`):
 
 ### Example: metadata
 
-The data gathered from Git is somewhat sparse.
+The data gathered from Git is somewhat sparse, only name and email.
 To add more metadata, either add it to `package.json` (used in this project’s
 [`package.json`][package-json]) or configure `options.contributors`.
 On the API, that’s done like so:
