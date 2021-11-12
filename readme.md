@@ -351,13 +351,26 @@ The supported properties on contributors are:
 *   `twitter` — Twitter username (example: `the_sara`)
 *   `mastodon` — Mastodon (`@user@domain`)
 
-An example of a reusable module is [`level-community`][level-community] by the
-`level-js` community.
+An example of a module is:
 
 ```js
   // …
-  .use(remarkGitContributors, {contributors: 'level-community'})
+  .use(remarkGitContributors, {contributors: './data/contributors.js'})
   // …
+```
+
+Where `data/contributors.js` would contain either:
+
+```js
+export const contributors = [{ email, name, /* … */ }, /* … */ ]
+```
+
+Or:
+
+```js
+const contributors = [{ email, name, /* … */ }, /* … */ ]
+
+export default contributors
 ```
 
 ## Types
@@ -483,8 +496,6 @@ abide by its terms.
 [mailmap]: https://git-scm.com/docs/git-shortlog#_mapping_authors
 
 [cwd]: https://github.com/vfile/vfile#vfilecwd
-
-[level-community]: https://www.npmjs.com/package/level-community
 
 [append-if-missing]: #optionsappendifmissing
 
