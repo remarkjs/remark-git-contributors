@@ -52,7 +52,8 @@ are maintained with Git and want to show who helped build them by adding their
 names, websites, and perhaps some more info, based on their commits, to readmes.
 This package is useful because it’s automated based on Git: those who commit
 will get included.
-The downside is that commits aren’t the only way to contribute
+The downside is that commits aren’t the only way to contribute (something
+[All Contributors][all-contributors] focusses on).
 
 This plugin is a Git layer on top of
 [`remark-contributors`][remark-contributors], so it shares its benefits.
@@ -486,3 +487,5 @@ abide by its terms.
 [level-community]: https://www.npmjs.com/package/level-community
 
 [append-if-missing]: #optionsappendifmissing
+
+[all-contributors]: https://github.com/all-contributors/all-contributors
