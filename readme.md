@@ -151,10 +151,10 @@ Configuration (optional).
 
 ###### `options.limit`
 
-Limit the total number of contributors rendered (`number`, default: `0`).
-A limit of `0` (or lower) results in all contributors being included.
-If `limit` is given, only the top `<limit>` contributors, sorted by commit
-count, are included.
+Limit the total number of contributors rendered (`number`, default: `Infinity`).
+A limit of `Infinity` or `0` (or lower) results in all contributors being
+included.
+The top contributors by commit count are included.
 
 ###### `options.contributors`
 
