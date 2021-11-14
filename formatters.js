@@ -1,9 +1,9 @@
 /**
- * @typedef {import('remark-contributors').FormatterObjects} FormatterObjects
+ * @typedef {import('remark-contributors').FormatterObject} FormatterObject
  */
 
 /**
- * @type {FormatterObjects}
+ * @type {Record<string, FormatterObject>}
  */
 export const defaultFormatters = {
   email: {exclude: true},
