@@ -9,150 +9,126 @@
 [![Backers][backers-badge]][collective]
 [![Chat][chat-badge]][chat]
 
-[**remark**][remark] plugin to inject Git contributors into a markdown table.
-Collects contributors from Git history, deduplicates them, augments it with
-metadata found in options, a module, or `package.json` and calls
-[`remark-contributors`][contributors] to render the markdown table.
-
-## Note!
-
-This plugin is ready for the new parser in remark
-([`micromark`](https://github.com/micromark/micromark),
-see [`remarkjs/remark#536`](https://github.com/remarkjs/remark/pull/536)).
-No change is needed: it works exactly the same now as it did before!
-(note that `remark-gfm` must be used as well to support tables)
+**[remark][]** plugin to generate a list of Git contributors.
 
 ## Contents
 
+*   [What is this?](#what-is-this)
+*   [When should I use this?](#when-should-i-use-this)
 *   [Install](#install)
 *   [Use](#use)
-    *   [Inject](#inject)
-    *   [Metadata](#metadata)
-*   [Supported properties](#supported-properties)
 *   [API](#api)
     *   [`unified().use(remarkGitContributors[, options])`](#unifieduseremarkgitcontributors-options)
+*   [Examples](#examples)
+    *   [Example: CLI](#example-cli)
+    *   [Example: CLI in npm scripts](#example-cli-in-npm-scripts)
+    *   [Example: `appendIfMissing`](#example-appendifmissing)
+    *   [Example: metadata](#example-metadata)
+*   [Types](#types)
+*   [Compatibility](#compatibility)
 *   [Security](#security)
 *   [Contribute](#contribute)
 *   [Contributors](#contributors)
 *   [License](#license)
 
+## What is this?
+
+This package is a [unified][] ([remark][]) plugin that collects contributors
+from Git history, deduplicates them, augments it with metadata found in options,
+a module, or `package.json`, and passes that to
+[`remark-contributors`][remark-contributors] to add them in a table in
+`## Contributors`.
+
+**unified** is a project that transforms content with abstract syntax trees
+(ASTs).
+**remark** adds support for markdown to unified.
+**mdast** is the markdown AST that remark uses.
+This is a remark plugin that transforms mdast.
+
+## When should I use this?
+
+This project is particularly useful when you have (open source) projects that
+are maintained with Git and want to show who helped build them by adding their
+names, websites, and perhaps some more info, based on their commits, to readmes.
+This package is useful because it’s automated based on Git: those who commit
+will get included.
+The downside is that commits aren’t the only way to contribute (something
+[All Contributors][all-contributors] focusses on).
+
+This plugin is a Git layer on top of
+[`remark-contributors`][remark-contributors], so it shares its benefits.
+You can also use that plugin when you don’t want Git commits to be the source of
+truth.
+
 ## Install
 
-This package is [ESM only](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c):
-Node 12+ is needed to use it and it must be `import`ed instead of `require`d.
-
-[npm][]:
+This package is [ESM only](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c).
+In Node.js (version 12.20+, 14.14+, or 16.0+), install with [npm][]:
 
 ```sh
 npm install remark-git-contributors
 ```
 
+Contributions are welcome to add support for Deno.
+
 ## Use
 
-With [`remark-cli`][cli], modifying a markdown file in place (`-o`):
+Say we have the following file `example.md` in this project:
 
-```sh
-remark --use remark-git-contributors readme.md -o
+```markdown
+# Example
+
+Some text.
+
+## Contributors
+
+## License
+
+MIT
 ```
 
-### Inject
-
-Injecting a contributors section is opt-in: if a `Contributors` heading is not
-found in the markdown (case- and level-insensitive), the plugin doesn’t do
-anything, unless [`appendIfMissing`][api] is set.
-
-If the Git repository has many contributors, it is recommended to have them
-listed in a `contributors.md` rather than `readme.md`.
-To achieve this, add a `Contributors` heading to a `contributors.md` but not to
-`readme.md`, prior to running `remark`.
-This way you can use the same pipeline (possibly with other plugins) on both
-files, only injecting contributors into one:
-
-```sh
-remark --use remark-git-contributors readme.md contributors.md -o
-```
-
-### Metadata
-
-To augment user metadata, configure the plugin in your `package.json`:
+And our module `example.js` looks as follows:
 
 ```js
-"remarkConfig": {
-  "plugins": [
-    [
-      "remark-git-contributors",
-      {
-        "contributors": /* … */
-      }
-    ]
-  ]
+import {read} from 'to-vfile'
+import {remark} from 'remark'
+import remarkGfm from 'remark-gfm'
+import remarkGitContributors from 'remark-git-contributors'
+
+main()
+
+async function main() {
+  const file = await remark()
+    .use(remarkGfm) // Required: add support for tables (a GFM feature).
+    .use(remarkGitContributors)
+    .process(await read('example.md'))
+
+  console.log(String(file))
 }
 ```
 
-Where `contributors` is either:
+Now running `node example.js` yields:
 
-*   An array in the form of `[{ email, name, … }, … ]`;
-*   A module id or path to a file that exports `contributors` as either the
-    default export or as a `contributors` named export specifier.
+```markdown
+# Example
 
-Note that `remark-git-contributors` excludes people that are not in Git history.
-This way the `contributors` metadata can be reused in multiple projects.
-Each contributor should at least have an `email` property to match against Git
-email addresses.
-To counter the fact that people change their email address, contributors are
-also matched by `name` if present.
+Some text.
 
-As a shortcut you can replace the options object with a module id.
-For example, `level-js` uses metadata stored in
-[`level-community`][level-community]:
+## Contributors
 
-```json
-"remarkConfig": {
-  "plugins": {
-    "remark-git-contributors": "level-community"
-  }
-}
+| Name                | GitHub                                       | Social                                                |
+| :------------------ | :------------------------------------------- | :---------------------------------------------------- |
+| **Vincent Weevers** | [**@vweevers**](https://github.com/vweevers) | [**@vweevers@twitter**](https://twitter.com/vweevers) |
+| **Titus Wormer**    | [**@wooorm**](https://github.com/wooorm)     | [**@wooorm@twitter**](https://twitter.com/wooorm)     |
+
+## License
+
+MIT
 ```
 
-Here’s an example of inline metadata:
-
-```json
-"remarkConfig": {
-  "plugins": {
-    "remark-git-contributors": {
-      "contributors": [{
-        "name": "Sara",
-        "email": "sara@example.com",
-        "github": "sara"
-      }]
-    }
-  }
-}
-```
-
-Alternatively, put the metadata in the [`author` or `contributors`
-fields][fields] in `package.json`.
-For example:
-
-```json
-"author": {
-  "name": "Sara",
-  "email": "sara@example.com",
-  "github": "sara"
-}
-```
-
-If you’re experiencing people showing up multiple times from the Git history,
-for example because they switched email addresses while contributing to the
-project, or if their name or email are wrong, you can “merge” and fix
-contributors in Git by using a [`.mailmap` file][mailmap].
-
-## Supported properties
-
-*   `name`: overrides the name stored in git commits
-*   `github`: GitHub username
-*   `twitter`: Twitter username
-*   `mastodon`: Mastodon with format `@user@domain`
+> 👉 **Note**: These contributors are inferred from this project’s
+> [`package.json`][package-json].
+> Running this example in a different package will yield different results.
 
 ## API
 
@@ -161,14 +137,24 @@ The default export is `remarkGitContributors`.
 
 ### `unified().use(remarkGitContributors[, options])`
 
-Inject Git contributors into a markdown table.
+Generate a list of Git contributors.
+In short, this plugin:
+
+*   looks for the first heading matching `/^contributors$/i`
+*   if no heading is found and `appendIfMissing` is set, injects such a heading
+*   if there is a heading, replaces everything in that section with a new table
+    with Git contributors
+
+##### `options`
+
+Configuration (optional).
 
 ###### `options.limit`
 
-Limit the rendered contributors (`number`, default: `0`).
-A limit of `0` (or lower) includes all contributors.
-If `limit` is given, only the top `<limit>` contributors, sorted by commit
-count, are rendered.
+Limit the total number of contributors rendered (`number`, default: `Infinity`).
+A limit of `Infinity` or `0` (or lower) results in all contributors being
+included.
+The top contributors by commit count are included.
 
 ###### `options.contributors`
 
@@ -184,7 +170,222 @@ Working directory from which to resolve a `contributors` module, if any
 
 ###### `options.appendIfMissing`
 
-Inject a Contributors section if there is none (`boolean`, default: `false`).
+Inject a `## Contributors` section if there is none (`boolean`, default:
+`false`).
+
+## Examples
+
+### Example: CLI
+
+It’s recommended to use `remark-git-contributors` on the CLI with
+[`remark-cli`][cli].
+Install both (and [`remark-gfm`][remark-gfm]) with [npm][]:
+
+```sh
+npm install remark-cli remark-gfm remark-git-contributors --save-dev
+```
+
+Let’s say we have an `example.md` with the following text:
+
+```markdown
+# Hello
+
+Some text.
+
+## Contributors
+```
+
+You can now use the CLI to format `example.md`:
+
+```sh
+npx remark --output --use remark-gfm --use remark-git-contributors example.md
+```
+
+This adds the table of contributors to `example.md`, which now contains (when
+running in this project):
+
+```markdown
+# Hello
+
+Some text.
+
+## Contributors
+
+| Name                | GitHub                                       | Social                                                |
+| :------------------ | :------------------------------------------- | :---------------------------------------------------- |
+| **Vincent Weevers** | [**@vweevers**](https://github.com/vweevers) | [**@vweevers@twitter**](https://twitter.com/vweevers) |
+| **Titus Wormer**    | [**@wooorm**](https://github.com/wooorm)     | [**@wooorm@twitter**](https://twitter.com/wooorm)     |
+```
+
+### Example: CLI in npm scripts
+
+You can use `remark-git-contributors` and [`remark-cli`][cli] in an npm script
+to format markdown in your project.
+Install both (and [`remark-gfm`][remark-gfm]) with [npm][]:
+
+```sh
+npm install remark-cli remark-gfm remark-git-contributors --save-dev
+```
+
+Then, add a format script and configuration to `package.json`:
+
+```js
+{
+  // …
+  "scripts": {
+    // …
+    "format": "remark . --quiet --output",
+    // …
+  },
+  "remarkConfig": {
+    "plugins": [
+      "remark-gfm",
+      "remark-git-contributors"
+    ]
+  },
+  // …
+}
+```
+
+> 💡 **Tip**: Add other tools such as prettier or ESLint to check and format
+> other files.
+>
+> 💡 **Tip**: Run `./node_modules/.bin/remark --help` for help with
+> `remark-cli`.
+
+Now you format markdown in your project with:
+
+```sh
+npm run format
+```
+
+### Example: `appendIfMissing`
+
+The default behavior of this plugin is to not generate lists of Git
+contributors if there is no `## Contributors` (case- and level-insensitive).
+You can change that by configuring the plugin with
+[`appendIfMissing: true`][append-if-missing].
+
+The reason for not generating contributors by default is that as we saw in the
+previous example (CLI in npm scripts) remark and this plugin often run on
+several files.
+You can choose where to add the list by explicitly adding `## Contributors`
+in the main file (`readme.md`) and other docs won’t be touched.
+Or, when you have many contributors, add a specific `contributors.md` file,
+with a primary `# Contributors` heading, and the list will be generated there.
+
+To turn `appendIfMissing` mode on, pass it like so on the API:
+
+```js
+  // …
+  .use(remarkGitContributors, {appendIfMissing: true})
+  // …
+```
+
+Or on the CLI (in `package.json`):
+
+```js
+  // …
+  "remarkConfig": {
+    "plugins": [
+      // …
+      [
+        "remark-git-contributors",
+        {"appendIfMissing": true}
+      ]
+    ]
+  },
+  // …
+```
+
+### Example: metadata
+
+The data gathered from Git is only includes names and emails.
+To add more metadata, either add it to `package.json` (used in this project’s
+[`package.json`][package-json]) or configure `options.contributors`.
+On the API, that’s done like so:
+
+```js
+  // …
+  .use(remarkGitContributors, {contributors: /* value */})
+  // …
+```
+
+Or on the CLI (in `package.json`):
+
+```js
+  // …
+  "remarkConfig": {
+    "plugins": [
+      // …
+      [
+        "remark-git-contributors",
+        {"contributors": /* value */}
+      ]
+    ]
+  },
+  // …
+```
+
+The value for `contributors` is either:
+
+*   an array in the form of `[{ email, name, … }, … ]`;
+*   a module id, or path to a file, that exports `contributors` as the default
+    export or as a `contributors` named export
+
+> 👉 **Note**: contributors that are not in Git history are excluded.
+> This way the `contributors` metadata can be reused in multiple projects.
+
+Each contributor should at least have an `email` property to match against Git
+email addresses.
+If you’re experiencing people showing up multiple times from Git history, for
+example because they switched email addresses while contributing to the project,
+or if their name or email are wrong, you can “merge” and fix contributors in Git
+by using a [`.mailmap` file][mailmap].
+
+The supported properties on contributors are:
+
+*   `name` — person’s name (example: `Sara`)
+*   `email` — person’s email (example: `sara@example.com`)
+*   `github` — GitHub username (example: `sara123`)
+*   `twitter` — Twitter username (example: `the_sara`)
+*   `mastodon` — Mastodon (`@user@domain`)
+
+An example of a module is:
+
+```js
+  // …
+  .use(remarkGitContributors, {contributors: './data/contributors.js'})
+  // …
+```
+
+Where `data/contributors.js` would contain either:
+
+```js
+export const contributors = [{ email, name, /* … */ }, /* … */ ]
+```
+
+Or:
+
+```js
+const contributors = [{ email, name, /* … */ }, /* … */ ]
+
+export default contributors
+```
+
+## Types
+
+This package is fully typed with [TypeScript][].
+It exports an `Options` type which models the interface of the accepted options.
+
+## Compatibility
+
+Projects maintained by the unified collective are compatible with all maintained
+versions of Node.js.
+As of now, that is Node.js 12.20+, 14.14+, and 16.0+.
+Our projects sometimes work with older versions, but this is not guaranteed.
+
+This plugin works with `unified` version 6+ and `remark` version 7+.
 
 ## Security
 
@@ -199,13 +400,13 @@ This could open you up to a [cross-site scripting (XSS)][xss] attack if you pass
 user provided content in or store user provided content in `package.json` or
 Git.
 
-This may become a problem if the markdown later transformed to
-[**rehype**][rehype] ([**hast**][hast]) or opened in an unsafe markdown viewer.
+This may become a problem if the markdown later transformed to **[rehype][]**
+(**[hast][]**) or opened in an unsafe markdown viewer.
 
 If `contributors` is a string, it is handled as a module identifier and
-loaded with `require`.
-This could also be very dangerous if an attacker was able to inject code in
-that package.
+imported.
+This could also be very dangerous if an attacker was able to inject code in that
+package.
 
 ## Contribute
 
@@ -274,22 +475,28 @@ abide by its terms.
 
 [remark]: https://github.com/remarkjs/remark
 
-[contributors]: https://github.com/remarkjs/remark-contributors
+[unified]: https://github.com/unifiedjs/unified
 
-[cli]: https://github.com/remarkjs/remark/tree/HEAD/packages/remark-cli
-
-[api]: #api
-
-[level-community]: https://www.npmjs.com/package/level-community
-
-[fields]: https://docs.npmjs.com/files/package.json#people-fields-author-contributors
-
-[mailmap]: https://git-scm.com/docs/git-shortlog#_mapping_authors
-
-[cwd]: https://github.com/vfile/vfile#vfilecwd
+[typescript]: https://www.typescriptlang.org
 
 [xss]: https://en.wikipedia.org/wiki/Cross-site_scripting
 
 [rehype]: https://github.com/rehypejs/rehype
 
 [hast]: https://github.com/syntax-tree/hast
+
+[remark-contributors]: https://github.com/remarkjs/remark-contributors
+
+[remark-gfm]: https://github.com/remarkjs/remark-gfm
+
+[package-json]: package.json
+
+[cli]: https://github.com/remarkjs/remark/tree/HEAD/packages/remark-cli
+
+[mailmap]: https://git-scm.com/docs/git-shortlog#_mapping_authors
+
+[cwd]: https://github.com/vfile/vfile#vfilecwd
+
+[append-if-missing]: #optionsappendifmissing
+
+[all-contributors]: https://github.com/all-contributors/all-contributors

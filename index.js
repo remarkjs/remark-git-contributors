@@ -42,10 +42,7 @@ const headingExpression = /^contributors$/i
 const idFields = ['email', 'name', 'github', 'social.url']
 
 /**
- * Plugin to inject Git contributors into a markdown table.
- * Collects contributors from Git history, deduplicates them, augments it with
- * metadata found in options, a module, or `package.json` and calls
- * `remark-contributors` to render the markdown table.
+ * Plugin to generate a list of Git contributors.
  *
  * @type {import('unified').Plugin<[(string|Options)?]|void[], Root>}
  * @returns {(node: Root, file: VFile) => Promise<void>}
@@ -72,7 +69,7 @@ export default function remarkGitContributors(options = {}) {
       found = true
     })
 
-    // Skip work if there's no Contributors heading.
+    // Skip work if there’s no Contributors heading.
     // remark-contributors also does this so this is an optimization.
     if (!found && !settings.appendIfMissing) {
       return
