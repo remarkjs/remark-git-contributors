@@ -18,6 +18,7 @@
 *   [Use](#use)
 *   [API](#api)
     *   [`unified().use(remarkGitContributors[, options])`](#unifieduseremarkgitcontributors-options)
+    *   [`Contributor`](#contributor)
     *   [`Options`](#options)
 *   [Examples](#examples)
     *   [Example: CLI](#example-cli)
@@ -146,6 +147,17 @@ In short, this plugin:
 
 Transform ([`Transformer`][unified-transformer]).
 
+### `Contributor`
+
+Contributor in string form (`name <email> (url)`) or as object (TypeScript
+type).
+
+###### Type
+
+```ts
+type Contributor = Record<string, unknown> | string
+```
+
 ### `Options`
 
 Configuration (TypeScript type).
@@ -154,7 +166,8 @@ Configuration (TypeScript type).
 
 *   `appendIfMissing` (`boolean`, default: `false`)
     — inject the section if there is none
-*   `contributors` (`Array<Contributor>` or `string`, optional)
+*   `contributors` ([`Array<Contributor>`][api-contributor] or `string`,
+    optional)
     — list of contributors to inject;
     defaults to the `contributors` field in the closest `package.json` upwards
     from the processed file, if there is one;
@@ -371,7 +384,8 @@ export default contributors
 ## Types
 
 This package is fully typed with [TypeScript][].
-It exports the additional type [`Options`][api-options].
+It exports the additional types [`Contributor`][api-contributor] and
+[`Options`][api-options].
 
 ## Compatibility
 
@@ -494,6 +508,8 @@ abide by its terms.
 [wiki-xss]: https://en.wikipedia.org/wiki/Cross-site_scripting
 
 [file-package-json]: package.json
+
+[api-contributor]: #contributor
 
 [api-options]: #options
 
