@@ -73,7 +73,7 @@ import {loadPlugin} from 'load-plugin'
 import {headingRange} from 'mdast-util-heading-range'
 import parseAuthor from 'parse-author'
 import remarkContributors from 'remark-contributors'
-import {findUpOne} from 'vfile-find-up'
+import {findUp} from 'vfile-find-up'
 import {defaultFormatters} from './formatters.js'
 
 const noreply = '@users.noreply.github.com'
@@ -120,7 +120,7 @@ export default function remarkGitContributors(options) {
     /* c8 ignore next -- verbose to test. */
     const base = file.dirname ? path.resolve(cwd, file.dirname) : cwd
     const indices = await indexContributors(cwd, settings.contributors)
-    const pkgFile = await findUpOne('package.json', base)
+    const pkgFile = await findUp('package.json', base)
     /** @type {PackageJson} */
     let pkg = {}
 
@@ -317,13 +317,14 @@ export default function remarkGitContributors(options) {
           formatters.social = {exclude: true}
         }
 
-        remarkContributors({
+        const transform = remarkContributors({
           contributors,
           formatters,
-          // @ts-expect-error: to do: update.
           appendIfMissing: settings.appendIfMissing,
           align: 'left'
-        })(tree, file).then(resolve, reject)
+        })
+
+        transform(tree, file).then(resolve, reject)
       }
     })
   }
