@@ -4,7 +4,6 @@
 [![Build][build-badge]][build]
 [![Coverage][coverage-badge]][coverage]
 [![Downloads][downloads-badge]][downloads]
-[![Size][size-badge]][size]
 [![Sponsors][sponsors-badge]][collective]
 [![Backers][backers-badge]][collective]
 [![Chat][chat-badge]][chat]
@@ -19,6 +18,7 @@
 *   [Use](#use)
 *   [API](#api)
     *   [`unified().use(remarkGitContributors[, options])`](#unifieduseremarkgitcontributors-options)
+    *   [`Options`](#options)
 *   [Examples](#examples)
     *   [Example: CLI](#example-cli)
     *   [Example: CLI in npm scripts](#example-cli-in-npm-scripts)
@@ -39,12 +39,6 @@ a module, or `package.json`, and passes that to
 [`remark-contributors`][remark-contributors] to add them in a table in
 `## Contributors`.
 
-**unified** is a project that transforms content with abstract syntax trees
-(ASTs).
-**remark** adds support for markdown to unified.
-**mdast** is the markdown AST that remark uses.
-This is a remark plugin that transforms mdast.
-
 ## When should I use this?
 
 This project is particularly useful when you have (open source) projects that
@@ -62,8 +56,8 @@ truth.
 
 ## Install
 
-This package is [ESM only](https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c).
-In Node.js (version 12.20+, 14.14+, or 16.0+), install with [npm][]:
+This package is [ESM only][esm].
+In Node.js (version 16+), install with [npm][]:
 
 ```sh
 npm install remark-git-contributors
@@ -87,27 +81,23 @@ Some text.
 MIT
 ```
 
-And our module `example.js` looks as follows:
+…and a module `example.js`:
 
 ```js
-import {read} from 'to-vfile'
 import {remark} from 'remark'
 import remarkGfm from 'remark-gfm'
 import remarkGitContributors from 'remark-git-contributors'
+import {read} from 'to-vfile'
 
-main()
+const file = await remark()
+  .use(remarkGfm) // Required: add support for tables (a GFM feature).
+  .use(remarkGitContributors)
+  .process(await read('example.md'))
 
-async function main() {
-  const file = await remark()
-    .use(remarkGfm) // Required: add support for tables (a GFM feature).
-    .use(remarkGitContributors)
-    .process(await read('example.md'))
-
-  console.log(String(file))
-}
+console.log(String(file))
 ```
 
-Now running `node example.js` yields:
+…then running `node example.js` yields:
 
 ```markdown
 # Example
@@ -118,26 +108,27 @@ Some text.
 
 | Name                | GitHub                                       | Social                                                |
 | :------------------ | :------------------------------------------- | :---------------------------------------------------- |
-| **Vincent Weevers** | [**@vweevers**](https://github.com/vweevers) | [**@vweevers@twitter**](https://twitter.com/vweevers) |
 | **Titus Wormer**    | [**@wooorm**](https://github.com/wooorm)     | [**@wooorm@twitter**](https://twitter.com/wooorm)     |
+| **Vincent Weevers** | [**@vweevers**](https://github.com/vweevers) | [**@vweevers@twitter**](https://twitter.com/vweevers) |
 
 ## License
 
 MIT
 ```
 
-> 👉 **Note**: These contributors are inferred from this project’s
-> [`package.json`][package-json].
+> 👉 **Note**: These contributors are inferred from the Git history
+> and [`package.json`][file-package-json] in this repo.
 > Running this example in a different package will yield different results.
 
 ## API
 
 This package exports no identifiers.
-The default export is `remarkGitContributors`.
+The default export is [`remarkGitContributors`][api-remark-git-contributors].
 
 ### `unified().use(remarkGitContributors[, options])`
 
 Generate a list of Git contributors.
+
 In short, this plugin:
 
 *   looks for the first heading matching `/^contributors$/i`
@@ -145,40 +136,44 @@ In short, this plugin:
 *   if there is a heading, replaces everything in that section with a new table
     with Git contributors
 
-##### `options`
+###### Parameters
 
-Configuration (optional).
+*   `options` ([`Options`][api-options] or `string`, optional)
+    — configuration;
+    passing `string` is as if passing `options.contributors`
 
-###### `options.limit`
+###### Returns
 
-Limit the total number of contributors rendered (`number`, default: `Infinity`).
-A limit of `Infinity` or `0` (or lower) results in all contributors being
-included.
-The top contributors by commit count are included.
+Transform ([`Transformer`][unified-transformer]).
 
-###### `options.contributors`
+### `Options`
 
-Contributor metadata (`Array` or `string`, default: `[]`).
-Can be a list of contributor objects (see above).
-Can be a module id that will be `import`ed which exports `contributors` as
-either the default export or as a `contributors` named export specifier.
+Configuration (TypeScript type).
 
-###### `options.cwd`
+###### Fields
 
-Working directory from which to resolve a `contributors` module, if any
-(`string`, default: [`file.cwd`][cwd] or `process.cwd()`).
-
-###### `options.appendIfMissing`
-
-Inject a `## Contributors` section if there is none (`boolean`, default:
-`false`).
+*   `appendIfMissing` (`boolean`, default: `false`)
+    — inject the section if there is none
+*   `contributors` (`Array<Contributor>` or `string`, optional)
+    — list of contributors to inject;
+    defaults to the `contributors` field in the closest `package.json` upwards
+    from the processed file, if there is one;
+    supports the string form (`name <email> (url)`) as well;
+    throws if no contributors are found or given
+*   `cwd` (`string`, default: `file.cwd`)
+    — working directory from which to resolve a `contributors` module, if any
+*   `limit` (`number`, default: `0`)
+    — limit the rendered contributors;
+    `0` (or lower) includes all contributors;
+    if `limit` is given, only the top `<limit>` contributors, sorted by commit
+    count, are rendered
 
 ## Examples
 
 ### Example: CLI
 
 It’s recommended to use `remark-git-contributors` on the CLI with
-[`remark-cli`][cli].
+[`remark-cli`][remark-cli].
 Install both (and [`remark-gfm`][remark-gfm]) with [npm][]:
 
 ```sh
@@ -213,14 +208,14 @@ Some text.
 
 | Name                | GitHub                                       | Social                                                |
 | :------------------ | :------------------------------------------- | :---------------------------------------------------- |
-| **Vincent Weevers** | [**@vweevers**](https://github.com/vweevers) | [**@vweevers@twitter**](https://twitter.com/vweevers) |
 | **Titus Wormer**    | [**@wooorm**](https://github.com/wooorm)     | [**@wooorm@twitter**](https://twitter.com/wooorm)     |
+| **Vincent Weevers** | [**@vweevers**](https://github.com/vweevers) | [**@vweevers@twitter**](https://twitter.com/vweevers) |
 ```
 
 ### Example: CLI in npm scripts
 
-You can use `remark-git-contributors` and [`remark-cli`][cli] in an npm script
-to format markdown in your project.
+You can use `remark-git-contributors` and [`remark-cli`][remark-cli] in an npm
+script to format markdown in your project.
 Install both (and [`remark-gfm`][remark-gfm]) with [npm][]:
 
 ```sh
@@ -234,7 +229,7 @@ Then, add a format script and configuration to `package.json`:
   // …
   "scripts": {
     // …
-    "format": "remark . --quiet --output",
+    "format": "remark . --output --quiet",
     // …
   },
   "remarkConfig": {
@@ -264,7 +259,7 @@ npm run format
 The default behavior of this plugin is to not generate lists of Git
 contributors if there is no `## Contributors` (case- and level-insensitive).
 You can change that by configuring the plugin with
-[`appendIfMissing: true`][append-if-missing].
+`options.appendIfMissing: true`.
 
 The reason for not generating contributors by default is that as we saw in the
 previous example (CLI in npm scripts) remark and this plugin often run on
@@ -302,7 +297,7 @@ Or on the CLI (in `package.json`):
 
 The data gathered from Git is only includes names and emails.
 To add more metadata, either add it to `package.json` (used in this project’s
-[`package.json`][package-json]) or configure `options.contributors`.
+[`package.json`][file-package-json]) or configure `options.contributors`.
 On the API, that’s done like so:
 
 ```js
@@ -341,15 +336,15 @@ email addresses.
 If you’re experiencing people showing up multiple times from Git history, for
 example because they switched email addresses while contributing to the project,
 or if their name or email are wrong, you can “merge” and fix contributors in Git
-by using a [`.mailmap` file][mailmap].
+by using a [`.mailmap` file][git-mailmap].
 
 The supported properties on contributors are:
 
-*   `name` — person’s name (example: `Sara`)
 *   `email` — person’s email (example: `sara@example.com`)
 *   `github` — GitHub username (example: `sara123`)
-*   `twitter` — Twitter username (example: `the_sara`)
 *   `mastodon` — Mastodon (`@user@domain`)
+*   `name` — person’s name (example: `Sara`)
+*   `twitter` — Twitter username (example: `the_sara`)
 
 An example of a module is:
 
@@ -376,14 +371,17 @@ export default contributors
 ## Types
 
 This package is fully typed with [TypeScript][].
-It exports an `Options` type which models the interface of the accepted options.
+It exports the additional type [`Options`][api-options].
 
 ## Compatibility
 
-Projects maintained by the unified collective are compatible with all maintained
+Projects maintained by the unified collective are compatible with maintained
 versions of Node.js.
-As of now, that is Node.js 12.20+, 14.14+, and 16.0+.
-Our projects sometimes work with older versions, but this is not guaranteed.
+
+When we cut a new major release, we drop support for unmaintained versions of
+Node.
+This means we try to keep the current release line,
+`remark-git-contributors@^4`, compatible with Node.js 12.
 
 This plugin works with `unified` version 6+ and `remark` version 7+.
 
@@ -396,9 +394,9 @@ environment is not (fully) trusted.
 `options.contributors` (or `contributors` in `package.json`) and `author` from
 `package.json` are used and injected into the tree.
 `git log` also runs in the current working directory.
-This could open you up to a [cross-site scripting (XSS)][xss] attack if you pass
-user provided content in or store user provided content in `package.json` or
-Git.
+This could open you up to a [cross-site scripting (XSS)][wiki-xss] attack if
+you pass user provided content in or store user provided content in
+`package.json` or Git.
 
 This may become a problem if the markdown later transformed to **[rehype][]**
 (**[hast][]**) or opened in an unsafe markdown viewer.
@@ -447,10 +445,6 @@ abide by its terms.
 
 [downloads]: https://www.npmjs.com/package/remark-git-contributors
 
-[size-badge]: https://img.shields.io/bundlephobia/minzip/remark-git-contributors.svg
-
-[size]: https://bundlephobia.com/result?p=remark-git-contributors
-
 [sponsors-badge]: https://opencollective.com/unified/sponsors/badge.svg
 
 [backers-badge]: https://opencollective.com/unified/backers/badge.svg
@@ -463,40 +457,44 @@ abide by its terms.
 
 [npm]: https://docs.npmjs.com/cli/install
 
+[esm]: https://gist.github.com/sindresorhus/a39789f98801d908bbc7ff3ecc99d99c
+
 [health]: https://github.com/remarkjs/.github
 
-[contributing]: https://github.com/remarkjs/.github/blob/HEAD/contributing.md
+[contributing]: https://github.com/remarkjs/.github/blob/main/contributing.md
 
-[support]: https://github.com/remarkjs/.github/blob/HEAD/support.md
+[support]: https://github.com/remarkjs/.github/blob/main/support.md
 
-[coc]: https://github.com/remarkjs/.github/blob/HEAD/code-of-conduct.md
+[coc]: https://github.com/remarkjs/.github/blob/main/code-of-conduct.md
 
 [license]: license
 
+[all-contributors]: https://github.com/all-contributors/all-contributors
+
+[git-mailmap]: https://git-scm.com/docs/git-shortlog#_mapping_authors
+
+[hast]: https://github.com/syntax-tree/hast
+
 [remark]: https://github.com/remarkjs/remark
-
-[unified]: https://github.com/unifiedjs/unified
-
-[typescript]: https://www.typescriptlang.org
-
-[xss]: https://en.wikipedia.org/wiki/Cross-site_scripting
 
 [rehype]: https://github.com/rehypejs/rehype
 
-[hast]: https://github.com/syntax-tree/hast
+[remark-cli]: https://github.com/remarkjs/remark/tree/main/packages/remark-cli
 
 [remark-contributors]: https://github.com/remarkjs/remark-contributors
 
 [remark-gfm]: https://github.com/remarkjs/remark-gfm
 
-[package-json]: package.json
+[typescript]: https://www.typescriptlang.org
 
-[cli]: https://github.com/remarkjs/remark/tree/HEAD/packages/remark-cli
+[unified]: https://github.com/unifiedjs/unified
 
-[mailmap]: https://git-scm.com/docs/git-shortlog#_mapping_authors
+[unified-transformer]: https://github.com/unifiedjs/unified#transformer
 
-[cwd]: https://github.com/vfile/vfile#vfilecwd
+[wiki-xss]: https://en.wikipedia.org/wiki/Cross-site_scripting
 
-[append-if-missing]: #optionsappendifmissing
+[file-package-json]: package.json
 
-[all-contributors]: https://github.com/all-contributors/all-contributors
+[api-options]: #options
+
+[api-remark-git-contributors]: #unifieduseremarkgitcontributors-options
