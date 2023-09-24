@@ -44,8 +44,7 @@
   "type": "module",
   "exports": "./index.js",
   "files": [
-    "formatters.d.ts",
-    "formatters.js",
+    "lib/",
     "index.d.ts",
     "index.js"
   ],
