@@ -1,492 +1,723 @@
 /**
- * @typedef {import('vfile').VFile} VFile
  * @typedef {import('type-fest').PackageJson} PackageJson
  * @typedef {import('type-fest').PackageJson.Person} Person
- * @typedef {import('../index.js').Options} Options
  */
 
-import fs from 'node:fs'
+/**
+ * @typedef CommitOptions
+ *   Configuration to set up Git.
+ * @property {Array<Users> | null | undefined} [users]
+ *   Users.
+ * @property {string | null | undefined} [main]
+ *   Contents of file initially (optional).
+ * @property {boolean | null | undefined} [skipInit]
+ *   Skip `git init` (default: `false`).
+ *
+ * @typedef PackageOptions
+ *   Configuration to set up a `package.json`.
+ * @property {Person | null | undefined} [author]
+ *   Author.
+ * @property {Array<Person> | null | undefined} [contributors]
+ *   Contributors.
+ * @property {boolean | null | undefined} [broken]
+ *   Break the `package.json` (default: `false`).
+ *
+ * @typedef {[string, string]} Users
+ */
+
+import assert from 'node:assert/strict'
+import fs from 'node:fs/promises'
 import path from 'node:path'
-import {execFileSync} from 'node:child_process'
+import {execFile as execFileCallback} from 'node:child_process'
 import process from 'node:process'
-import test from 'tape'
-import {readSync} from 'to-vfile'
+import {promisify} from 'node:util'
+import test from 'node:test'
 import {remark} from 'remark'
 import remarkGfm from 'remark-gfm'
 import semver from 'semver'
 // @ts-expect-error: untyped.
 import tmpgen from 'tmpgen'
+import {VFile} from 'vfile'
 import remarkGitContributors from '../index.js'
 
+const execFile = promisify(execFileCallback)
+
+/** @type {() => string} */
 const temporary = tmpgen('remark-git-contributors/*')
 
 const testName = 'test'
 const testEmail = 'test@localhost'
 const testUrl = 'https://localhost'
 
-test('basic', (t) => {
-  run('00', {}, ({file, actual, expected}) => {
-    t.is(actual, expected)
-    t.deepEqual(
-      (file || {messages: []}).messages.map((d) => d.reason),
+const fixtures = new URL('fixture/', import.meta.url)
+
+test('remark-git-contributors', async function (t) {
+  await t.test('should work', async function () {
+    const cwd = temporary()
+    const [input, expected] = await getFixtures('00')
+
+    await createPackage(cwd)
+    await createCommits(cwd)
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors)
+      .process(new VFile({cwd, path: 'input.md', value: input}))
+
+    assert.equal(String(file), expected)
+    assert.deepEqual(
+      file.messages.map(function (d) {
+        return d.reason
+      }),
       ['no social profile for ' + testEmail]
     )
-    t.end()
   })
-})
 
-test('with metadata as strings', (t) => {
-  run(
-    '00',
-    {main: 'contributors-string.js', options: './index.js'},
-    ({file, actual, expected}) => {
-      t.is(actual, expected)
-      t.deepEqual(
-        (file || {messages: []}).messages.map((d) => d.reason),
-        ['no social profile for ' + testEmail]
+  await t.test('should support metadata as strings', async function () {
+    const cwd = temporary()
+    const [input, expected] = await getFixtures('00')
+
+    await createPackage(cwd)
+    await createCommits(cwd, {
+      main: String(
+        await fs.readFile(new URL('contributors-string.js', fixtures))
       )
-      t.end()
-    }
-  )
-})
+    })
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors, './index.js')
+      .process(new VFile({cwd, path: 'input.md', value: input}))
 
-test('with duplicate metadata', (t) => {
-  run(
-    '00',
-    {main: 'contributors-duplicates.js', options: './index.js'},
-    ({file, actual, expected}) => {
-      t.is(actual, expected)
-      t.deepEqual(
-        (file || {messages: []}).messages.map((d) => d.reason),
-        ['no social profile for ' + testEmail]
-      )
-      t.end()
-    }
-  )
-})
-
-test('with metadata', (t) => {
-  const contributors = [{email: testEmail, github: 'test', twitter: 'test'}]
-
-  run('01', {options: {contributors}}, ({file, actual, expected}) => {
-    t.is(actual, expected)
-    t.deepEqual(
-      (file || {messages: []}).messages.map((d) => d.reason),
-      []
+    assert.equal(String(file), expected)
+    assert.deepEqual(
+      file.messages.map(function (d) {
+        return d.reason
+      }),
+      ['no social profile for ' + testEmail]
     )
-    t.end()
   })
-})
 
-test('with metadata from module (main export)', (t) => {
-  run(
-    '01',
-    {main: 'contributors-main.js', options: './index.js'},
-    ({file, actual, expected}) => {
-      t.is(actual, expected)
-      t.deepEqual(
-        (file || {messages: []}).messages.map((d) => d.reason),
-        []
+  await t.test('should support duplicate metadata', async function () {
+    const cwd = temporary()
+    const [input, expected] = await getFixtures('00')
+
+    await createPackage(cwd)
+    await createCommits(cwd, {
+      main: String(
+        await fs.readFile(new URL('contributors-duplicates.js', fixtures))
       )
-      t.end()
-    }
-  )
-})
+    })
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors, './index.js')
+      .process(new VFile({cwd, path: 'input.md', value: input}))
 
-test('with metadata from module (named export)', (t) => {
-  run(
-    '01',
-    {main: 'contributors-named.js', options: './index.js'},
-    ({file, actual, expected}) => {
-      t.is(actual, expected)
-      t.deepEqual(
-        (file || {messages: []}).messages.map((d) => d.reason),
-        []
-      )
-      t.end()
-    }
-  )
-})
-
-test('with an unfound module id', (t) => {
-  run('00', {options: './missing.js'}, ({err}) => {
-    t.ok(/Cannot find module/.test(String(err)))
-    t.end()
+    assert.equal(String(file), expected)
+    assert.deepEqual(
+      file.messages.map(function (d) {
+        return d.reason
+      }),
+      ['no social profile for ' + testEmail]
+    )
   })
-})
 
-test('with a throwing module', (t) => {
-  run(
-    '00',
-    {main: 'contributors-throwing.js', options: './index.js'},
-    ({err}) => {
-      t.ok(String(err).startsWith('Error: Some error!'))
-      t.end()
-    }
-  )
-})
+  await t.test('should work w/ metadata', async function () {
+    const cwd = temporary()
+    const [input, expected] = await getFixtures('01')
 
-test('with an invalid exports', (t) => {
-  run(
-    '00',
-    {main: 'contributors-invalid-exports.js', options: './index.js'},
-    ({err}) => {
-      t.ok(
-        /^TypeError: The "contributors" option must be \(or resolve to\) an array/.test(
-          String(err)
+    await createPackage(cwd)
+    await createCommits(cwd)
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors, {
+        contributors: [{email: testEmail, github: 'test', twitter: 'test'}]
+      })
+      .process(new VFile({cwd, path: 'input.md', value: input}))
+
+    assert.equal(String(file), expected)
+    assert.deepEqual(file.messages, [])
+  })
+
+  await t.test(
+    'should work w/ metadata from default export',
+    async function () {
+      const cwd = temporary()
+      const [input, expected] = await getFixtures('01')
+
+      await createPackage(cwd)
+      await createCommits(cwd, {
+        main: String(
+          await fs.readFile(new URL('contributors-main.js', fixtures))
         )
-      )
-      t.end()
+      })
+      const file = await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors, './index.js')
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+
+      assert.equal(String(file), expected)
+      assert.deepEqual(file.messages, [])
     }
   )
-})
 
-test('with an invalid contributors setting', (t) => {
-  // @ts-expect-error: invalid
-  run('00', {options: {contributors: true}}, ({err}) => {
-    t.ok(
-      /^TypeError: The "contributors" option must be \(or resolve to\) an array/.test(
-        String(err)
+  await t.test('should work w/ metadata from named export', async function () {
+    const cwd = temporary()
+    const [input, expected] = await getFixtures('01')
+
+    await createPackage(cwd)
+    await createCommits(cwd, {
+      main: String(
+        await fs.readFile(new URL('contributors-named.js', fixtures))
       )
-    )
-    t.end()
+    })
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors, './index.js')
+      .process(new VFile({cwd, path: 'input.md', value: input}))
+
+    assert.equal(String(file), expected)
+    assert.deepEqual(file.messages, [])
   })
-})
 
-test('with metadata from module (default export)', (t) => {
-  run(
-    '01',
-    {main: 'contributors-default.js', options: './index.js'},
-    ({file, actual, expected}) => {
-      t.is(actual, expected)
-      t.deepEqual(
-        (file || {messages: []}).messages.map((d) => d.reason),
-        []
+  await t.test('should fail w/ an unfound module id', async function () {
+    const cwd = temporary()
+    const [input] = await getFixtures('00')
+
+    await createPackage(cwd)
+    await createCommits(cwd)
+
+    try {
+      await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors, './missing.js')
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+      assert.fail()
+    } catch (error) {
+      assert.match(String(error), /Cannot find module/)
+    }
+  })
+
+  await t.test('should fail w/ a throwing module', async function () {
+    const cwd = temporary()
+    const [input] = await getFixtures('00')
+
+    await createPackage(cwd)
+    await createCommits(cwd, {
+      main: String(
+        await fs.readFile(new URL('contributors-throwing.js', fixtures))
       )
-      t.end()
+    })
+
+    try {
+      await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors, './index.js')
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+      assert.fail()
+    } catch (error) {
+      assert.match(String(error), /Error: Some error!/)
+    }
+  })
+
+  await t.test('should fail w/ invalid exports', async function () {
+    const cwd = temporary()
+    const [input] = await getFixtures('00')
+
+    await createPackage(cwd)
+    await createCommits(cwd, {
+      main: String(
+        await fs.readFile(new URL('contributors-invalid-exports.js', fixtures))
+      )
+    })
+
+    try {
+      await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors, './index.js')
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+      assert.fail()
+    } catch (error) {
+      assert.match(
+        String(error),
+        /TypeError: The "contributors" option must be \(or resolve to\) an array/
+      )
+    }
+  })
+
+  await t.test(
+    'should fail w/ invalid `options.contributors`',
+    async function () {
+      const cwd = temporary()
+      const [input] = await getFixtures('00')
+
+      await createPackage(cwd)
+      await createCommits(cwd)
+
+      try {
+        await remark()
+          .use(remarkGfm)
+          // @ts-expect-error: check how runtime handles invalid `contributors`.
+          .use(remarkGitContributors, {contributors: true})
+          .process(new VFile({cwd, path: 'input.md', value: input}))
+        assert.fail()
+      } catch (error) {
+        assert.match(
+          String(error),
+          /TypeError: The "contributors" option must be \(or resolve to\) an array/
+        )
+      }
     }
   )
-})
 
-test('without heading', (t) => {
-  run('02', {}, ({file, actual, expected}) => {
-    t.is(actual, expected)
-    t.deepEqual(
-      (file || {messages: []}).messages.map((d) => d.reason),
-      []
-    )
-    t.end()
+  await t.test('should work w/o heading', async function () {
+    const cwd = temporary()
+    const [input, expected] = await getFixtures('02')
+
+    await createPackage(cwd)
+    await createCommits(cwd)
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors)
+      .process(new VFile({cwd, path: 'input.md', value: input}))
+
+    assert.equal(String(file), expected)
+    assert.deepEqual(file.messages, [])
   })
-})
 
-test('without heading, with `appendIfMissing`', (t) => {
-  run('03', {options: {appendIfMissing: true}}, ({file, actual, expected}) => {
-    t.is(actual, expected)
-    t.deepEqual(
-      (file || {messages: []}).messages.map((d) => d.reason),
-      ['no social profile for ' + testEmail]
-    )
-    t.end()
-  })
-})
+  await t.test(
+    'should work w/o heading, with `options.appendIfMissing`',
+    async function () {
+      const cwd = temporary()
+      const [input, expected] = await getFixtures('03')
 
-test('with a noreply email', (t) => {
-  const email = '944406+wooorm@users.noreply.github.com'
+      await createPackage(cwd)
+      await createCommits(cwd)
+      const file = await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors, {appendIfMissing: true})
+        .process(new VFile({cwd, path: 'input.md', value: input}))
 
-  run('04', {gitUsers: [[testName, email]]}, ({file, actual, expected}) => {
-    t.is(actual, expected)
-    t.deepEqual(
-      (file || {messages: []}).messages.map((d) => d.reason),
+      assert.equal(String(file), expected)
+      assert.deepEqual(
+        file.messages.map(function (d) {
+          return d.reason
+        }),
+        ['no social profile for ' + testEmail]
+      )
+    }
+  )
+
+  await t.test('should work w/ a noreply email', async function () {
+    const cwd = temporary()
+    const email = '944406+wooorm@users.noreply.github.com'
+    const [input, expected] = await getFixtures('04')
+
+    await createPackage(cwd)
+    await createCommits(cwd, {users: [[testName, email]]})
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors)
+      .process(new VFile({cwd, path: 'input.md', value: input}))
+
+    assert.equal(String(file), expected)
+    assert.deepEqual(
+      file.messages.map(function (d) {
+        return d.reason
+      }),
       ['no social profile for ' + email]
     )
-    t.end()
   })
-})
 
-test('ignores greenkeeper email', (t) => {
-  const email = 'example@greenkeeper.io'
+  await t.test('should ignore greenkeeper email', async function () {
+    const cwd = temporary()
+    const email = 'example@greenkeeper.io'
+    const [input] = await getFixtures('00')
 
-  run('00', {gitUsers: [[testName, email]]}, ({err}) => {
-    t.ok(
-      String(err).startsWith(
-        'Error: Missing required `contributors` in settings'
+    await createPackage(cwd)
+    await createCommits(cwd, {users: [[testName, email]]})
+
+    try {
+      await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors)
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+      assert.fail()
+    } catch (error) {
+      assert.match(
+        String(error),
+        /Error: Missing required `contributors` in settings/
       )
-    )
-    t.end()
+    }
   })
-})
 
-test('with invalid twitter', (t) => {
-  const contributors = [{email: testEmail, twitter: '@'}]
+  await t.test('should work w/ invalid twitter', async function () {
+    const cwd = temporary()
+    const [input, expected] = await getFixtures('00')
 
-  run('00', {options: {contributors}}, ({file, actual, expected}) => {
-    t.is(actual, expected)
-    t.deepEqual(
-      (file || {messages: []}).messages.map((d) => d.reason),
+    await createPackage(cwd)
+    await createCommits(cwd)
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors, {
+        contributors: [{email: testEmail, twitter: '@'}]
+      })
+      .process(new VFile({cwd, path: 'input.md', value: input}))
+
+    assert.equal(String(file), expected)
+    assert.deepEqual(
+      file.messages.map(function (d) {
+        return d.reason
+      }),
       ['invalid twitter handle for ' + testEmail]
     )
-    t.end()
   })
-})
 
-test('with valid mastodon', (t) => {
-  const contributors = [{email: testEmail, mastodon: '@foo@bar.com'}]
+  await t.test('should work w/ valid mastodon', async function () {
+    const cwd = temporary()
+    const [input, expected] = await getFixtures('05')
 
-  run('05', {options: {contributors}}, ({file, actual, expected}) => {
-    t.is(actual, expected)
-    t.deepEqual(
-      (file || {messages: []}).messages.map((d) => d.reason),
-      []
-    )
-    t.end()
+    await createPackage(cwd)
+    await createCommits(cwd)
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors, {
+        contributors: [{email: testEmail, mastodon: '@foo@bar.com'}]
+      })
+      .process(new VFile({cwd, path: 'input.md', value: input}))
+
+    assert.equal(String(file), expected)
+    assert.deepEqual(file.messages, [])
   })
-})
 
-test('with invalid mastodon', (t) => {
-  const contributors = [{email: testEmail, mastodon: '@foo'}]
+  await t.test('should work w/ invalid mastodon', async function () {
+    const cwd = temporary()
+    const [input, expected] = await getFixtures('00')
 
-  run('00', {options: {contributors}}, ({file, actual, expected}) => {
-    t.is(actual, expected)
-    t.deepEqual(
-      (file || {messages: []}).messages.map((d) => d.reason),
+    await createPackage(cwd)
+    await createCommits(cwd)
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors, {
+        contributors: [{email: testEmail, mastodon: '@foo'}]
+      })
+      .process(new VFile({cwd, path: 'input.md', value: input}))
+
+    assert.equal(String(file), expected)
+    assert.deepEqual(
+      file.messages.map(function (d) {
+        return d.reason
+      }),
       ['invalid mastodon handle for ' + testEmail]
     )
-    t.end()
   })
-})
 
-test('with empty email', (t) => {
-  run('00', {gitUsers: [[testName, '<>']]}, ({err}) => {
-    t.ok(
-      String(err).startsWith(
-        'Error: Missing required `contributors` in settings'
+  await t.test('should work w/ empty email', async function () {
+    const cwd = temporary()
+    const [input] = await getFixtures('00')
+
+    await createPackage(cwd)
+    await createCommits(cwd, {users: [[testName, '<>']]})
+
+    try {
+      await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors)
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+      assert.fail()
+    } catch (error) {
+      assert.match(
+        String(error),
+        /Error: Missing required `contributors` in settings/
       )
-    )
-    t.end()
-  })
-})
-
-test('multiple authors', (t) => {
-  /** @type {[string, string]} */
-  const topContributor = ['Alpha', 'alpha@localhost']
-  /** @type {[string, string]} */
-  const otherContributor = ['Bravo', 'bravo@localhost']
-  /** @type {[string, string]} */
-  const anotherContributor = ['Charlie', 'charlie@localhost']
-  const gitUsers = [
-    topContributor,
-    topContributor,
-    otherContributor,
-    anotherContributor,
-    topContributor,
-    anotherContributor,
-    otherContributor
-  ]
-
-  run('06', {gitUsers}, ({actual, expected}) => {
-    t.is(actual, expected)
-    t.end()
-  })
-})
-
-test('multiple authors with limit', (t) => {
-  /** @type {[string, string]} */
-  const topContributor = ['Alpha', 'alpha@localhost']
-  /** @type {[string, string]} */
-  const otherContributor = ['Bravo', 'bravo@localhost']
-  const gitUsers = [topContributor, topContributor, otherContributor]
-
-  run('07', {gitUsers, options: {limit: 1}}, ({actual, expected}) => {
-    t.is(actual, expected)
-    t.end()
-  })
-})
-
-test('duplicate Git users and contributors', (t) => {
-  const email = 'alpha@localhost'
-  /** @type {[string, string][]} */
-  const gitUsers = [
-    ['A name', email],
-    ['Another name', email]
-  ]
-  const contributors = [
-    {name: 'One more name', email, twitter: '@a'},
-    {name: 'The last name', email, twitter: '@b'}
-  ]
-
-  run('08', {gitUsers, options: {contributors}}, ({actual, expected}) => {
-    t.is(actual, expected)
-    t.end()
-  })
-})
-
-test('no Git', (t) => {
-  /** @type {[string, string][]} */
-  const gitUsers = []
-
-  run('00', {skipInit: true, gitUsers}, ({err}) => {
-    t.ok(String(err).startsWith('Error: Could not get Git contributors'))
-    t.end()
-  })
-})
-
-test('no Git users or contributors', (t) => {
-  run('00', {gitUsers: [], options: {contributors: []}}, ({file}) => {
-    t.deepEqual(
-      (file || {messages: []}).messages.map((d) => d.reason),
-      ['could not get Git contributors as there are no commits yet']
-    )
-    t.end()
-  })
-})
-
-test('package.json author', (t) => {
-  const pkgAuthor = {
-    name: testName,
-    email: testEmail,
-    url: testUrl,
-    github: 'test'
-  }
-
-  run('09', {pkgAuthor}, ({actual, expected}) => {
-    t.is(actual, expected)
-    t.end()
-  })
-})
-
-test('package.json contributors', (t) => {
-  const pkgContributors = [
-    {
-      name: testName,
-      email: testEmail,
-      url: testUrl,
-      github: 'test'
     }
-  ]
-
-  run('09', {pkgContributors}, ({actual, expected}) => {
-    t.is(actual, expected)
-    t.end()
   })
-})
 
-test('broken package.json', (t) => {
-  run('00', {pkgBroken: true}, ({err}) => {
-    const starts = semver.satisfies(process.version, '>=20')
-      ? 'SyntaxError: Unexpected non-whitespace character'
-      : 'SyntaxError: Unexpected token'
-    t.ok(String(err).startsWith(starts))
-    t.end()
-  })
-})
+  await t.test('should work w/ multiple authors', async function () {
+    /** @type {Users} */
+    const topContributor = ['Alpha', 'alpha@localhost']
+    /** @type {Users} */
+    const otherContributor = ['Bravo', 'bravo@localhost']
+    /** @type {Users} */
+    const anotherContributor = ['Charlie', 'charlie@localhost']
+    const cwd = temporary()
+    const [input, expected] = await getFixtures('06')
 
-test('sorts authors with equal commit count by name', (t) => {
-  run(
-    '10',
-    {
-      gitUsers: [
-        ['y', 'y@test'],
-        ['a', 'a@test'],
-        ['B', 'b@test'],
-        ['z', 'z@test'],
-        ['z', 'z@test']
+    await createPackage(cwd)
+    await createCommits(cwd, {
+      users: [
+        topContributor,
+        topContributor,
+        otherContributor,
+        anotherContributor,
+        topContributor,
+        anotherContributor,
+        otherContributor
       ]
-    },
-    ({actual, expected}) => {
-      t.is(actual, expected)
-      t.end()
+    })
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors)
+      .process(new VFile({cwd, path: 'input.md', value: input}))
+
+    assert.equal(String(file), expected)
+  })
+
+  await t.test(
+    'should work w/ multiple authors and `options.limit`',
+    async function () {
+      /** @type {Users} */
+      const topContributor = ['Alpha', 'alpha@localhost']
+      /** @type {Users} */
+      const otherContributor = ['Bravo', 'bravo@localhost']
+      const cwd = temporary()
+      const [input, expected] = await getFixtures('07')
+
+      await createPackage(cwd)
+      await createCommits(cwd, {
+        users: [topContributor, topContributor, otherContributor]
+      })
+      const file = await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors, {limit: 1})
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+
+      assert.equal(String(file), expected)
+    }
+  )
+
+  await t.test(
+    'should work w/ duplicate Git users and contributors',
+    async function () {
+      const cwd = temporary()
+      const email = 'alpha@localhost'
+      const [input, expected] = await getFixtures('08')
+
+      await createPackage(cwd)
+      await createCommits(cwd, {
+        users: [
+          ['A name', email],
+          ['Another name', email]
+        ]
+      })
+
+      const file = await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors, {
+          contributors: [
+            {name: 'One more name', email, twitter: '@a'},
+            {name: 'The last name', email, twitter: '@b'}
+          ]
+        })
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+
+      assert.equal(String(file), expected)
+    }
+  )
+
+  await t.test('should work w/o git', async function () {
+    const cwd = temporary()
+    const [input] = await getFixtures('00')
+
+    await createPackage(cwd)
+    await createCommits(cwd, {users: [], skipInit: true})
+
+    try {
+      await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors)
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+      assert.fail()
+    } catch (error) {
+      assert.match(String(error), /Error: Could not get Git contributors/)
+    }
+  })
+
+  await t.test(
+    'should work w/ no git users or `contributors`',
+    async function () {
+      const cwd = temporary()
+      const [input] = await getFixtures('00')
+
+      await createPackage(cwd)
+      await createCommits(cwd, {users: []})
+
+      const file = await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors, {contributors: []})
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+
+      assert.deepEqual(
+        file.messages.map(function (d) {
+          return d.reason
+        }),
+        ['could not get Git contributors as there are no commits yet']
+      )
+    }
+  )
+
+  await t.test('should work w/ `author` in `package.json`', async function () {
+    const cwd = temporary()
+    const [input, expected] = await getFixtures('09')
+
+    await createPackage(cwd, {
+      author: {
+        name: testName,
+        email: testEmail,
+        url: testUrl,
+        // @ts-expect-error: fine to add more info in persons.
+        github: 'test'
+      }
+    })
+    await createCommits(cwd)
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors)
+      .process(new VFile({cwd, path: 'input.md', value: input}))
+
+    assert.equal(String(file), expected)
+  })
+
+  await t.test(
+    'should work w/ `contributors` in `package.json`',
+    async function () {
+      const cwd = temporary()
+      const [input, expected] = await getFixtures('09')
+
+      await createPackage(cwd, {
+        contributors: [
+          // @ts-expect-error: fine to add more info in persons.
+          {name: testName, email: testEmail, url: testUrl, github: 'test'}
+        ]
+      })
+      await createCommits(cwd)
+      const file = await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors)
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+
+      assert.equal(String(file), expected)
+    }
+  )
+
+  await t.test('should fail w/ broken `package.json`s', async function () {
+    const cwd = temporary()
+    const [input] = await getFixtures('00')
+
+    await createPackage(cwd, {broken: true})
+    await createCommits(cwd)
+
+    try {
+      await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors)
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+      assert.fail()
+    } catch (error) {
+      assert.match(
+        String(error),
+        semver.satisfies(process.version, '>=20')
+          ? /SyntaxError: Unexpected non-whitespace character/
+          : /SyntaxError: Unexpected token/
+      )
+    }
+  })
+
+  await t.test(
+    'should sort authors with equal commit count by name',
+    async function () {
+      const cwd = temporary()
+      const [input, expected] = await getFixtures('10')
+
+      await createPackage(cwd)
+      await createCommits(cwd, {
+        users: [
+          ['y', 'y@test'],
+          ['a', 'a@test'],
+          ['B', 'b@test'],
+          ['z', 'z@test'],
+          ['z', 'z@test']
+        ]
+      })
+
+      const file = await remark()
+        .use(remarkGfm)
+        .use(remarkGitContributors)
+        .process(new VFile({cwd, path: 'input.md', value: input}))
+
+      assert.equal(String(file), expected)
     }
   )
 })
 
 /**
- * @param {string} fixture
- * @param {object} options_
- * @param {string} [options_.main]
- * @param {[string, string][]} [options_.gitUsers]
- * @param {Person} [options_.pkgAuthor]
- * @param {Person[]} [options_.pkgContributors]
- * @param {boolean} [options_.pkgBroken=false]
- * @param {boolean} [options_.skipInit=false]
- * @param {Options|string} [options_.options]
- * @param {(results: {err: Error|null|undefined, file: VFile|undefined, cwd: string, actual: string, expected: string}) => void} test
+ * @param {string} cwd
+ *   Path to folder.
+ * @param {PackageOptions | null | undefined} [options]
+ *   Configuration (optional).
+ * @returns {Promise<undefined>}
+ *   Nothing.
  */
-function run(fixture, options_, test) {
-  const cwd = temporary()
-  const inputFile = path.join('test', 'fixture', fixture + '-input.md')
-  const outputFile = path.join('test', 'fixture', fixture + '-output.md')
-  const main = options_.main
-    ? fs.readFileSync(path.join('test', 'fixture', options_.main), 'utf8')
-    : ''
-  const gitUsers = options_.gitUsers || [[testName, testEmail]]
-  const {pkgAuthor, pkgContributors, pkgBroken, options} = options_
-
-  if (!options_.skipInit) {
-    execFileSync('git', ['init', '.'], {cwd, stdio: 'ignore'})
+async function createPackage(cwd, options) {
+  const settings = options || {}
+  const pkg = /** @type {PackageJson} */ ({
+    author: settings.author || undefined,
+    contributors: settings.contributors || undefined,
+    name: 'example',
+    private: true,
+    type: 'module'
+  })
+  let value = JSON.stringify(pkg)
+  if (settings.broken) {
+    value = value.slice(1)
   }
 
-  let pkg = JSON.stringify(
-    /** @type {PackageJson} */ {
-      name: 'example',
-      type: 'module',
-      private: true,
-      author: pkgAuthor,
-      contributors: pkgContributors
-    }
-  )
+  await fs.writeFile(path.join(cwd, 'package.json'), value)
+}
 
-  if (pkgBroken) {
-    pkg = pkg.slice(1)
-  }
-
-  fs.writeFileSync(path.join(cwd, 'package.json'), pkg)
-
+/**
+ * @param {string} cwd
+ *   Path to folder.
+ * @param {CommitOptions | null | undefined} [options]
+ *   Configuration (optional).
+ * @returns {Promise<undefined>}
+ *   Nothing.
+ */
+async function createCommits(cwd, options) {
+  const settings = options || {}
+  const users = settings.users || [['test', 'test@localhost']]
   let index = -1
-  while (++index < gitUsers.length) {
-    const [name, email] = gitUsers[index]
-    execFileSync('git', ['config', 'user.name', name], {
-      cwd,
-      stdio: 'ignore'
-    })
-    execFileSync('git', ['config', 'user.email', email], {
-      cwd,
-      stdio: 'ignore'
-    })
-    execFileSync('git', ['config', 'commit.gpgsign', 'false'], {
-      cwd,
-      stdio: 'ignore'
-    })
 
-    if (index === 0) {
-      fs.writeFileSync(path.join(cwd, 'index.js'), main)
-    } else {
-      fs.appendFileSync(path.join(cwd, 'index.js'), '\n// ' + index + '\n')
-    }
-
-    execFileSync('git', ['add', 'index.js'], {cwd, stdio: 'ignore'})
-    execFileSync('git', ['commit', '-m', 'commit ' + index], {
-      cwd,
-      stdio: 'ignore'
-    })
+  if (!settings.skipInit) {
+    await execFile('git', ['init', '.'], {cwd})
   }
 
-  const input = readSync(inputFile)
+  while (++index < users.length) {
+    const [name, email] = users[index]
+    await fs.writeFile(
+      path.join(cwd, 'index.js'),
+      settings.main && index === 0 ? settings.main : '// ' + index + '\n'
+    )
+    await execFile('git', ['config', 'user.name', name], {cwd})
+    await execFile('git', ['config', 'user.email', email], {cwd})
+    await execFile('git', ['config', 'commit.gpgsign', 'false'], {cwd})
+    await execFile('git', ['add', 'index.js'], {cwd})
+    await execFile('git', ['commit', '-m', 'commit ' + index], {cwd})
+  }
+}
 
-  input.path = path.relative('test', inputFile)
-  input.value = String(input).replace(/\r\n/g, '\n')
-  input.cwd = cwd
-
-  const expected = fs
-    .readFileSync(outputFile, 'utf8')
-    .trim()
-    .replace(/\r\n/g, '\n')
-
-  remark()
-    .use(remarkGfm)
-    // @ts-expect-error: to do: remove.
-    .use(remarkGitContributors, options)
-    .process(input, (error, file) => {
-      const actual = String(file).trim()
-      test({err: error, file, cwd, actual, expected})
-    })
+/**
+ * Read the input and output of a fixture.
+ *
+ * @param {string} name
+ *   Name of the fixture.
+ * @returns {Promise<[string, string]>}
+ *   Input and output.
+ */
+async function getFixtures(name) {
+  const input = String(
+    await fs.readFile(new URL(name + '-input.md', fixtures))
+  ).replace(/\r\n/g, '\n')
+  const output = String(
+    await fs.readFile(new URL(name + '-output.md', fixtures))
+  ).replace(/\r\n/g, '\n')
+  return [input, output]
 }
