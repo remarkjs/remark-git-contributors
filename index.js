@@ -1,83 +1,123 @@
 /**
  * @typedef {import('mdast').Root} Root
- * @typedef {import('vfile').VFile} VFile
  * @typedef {import('remark-contributors').Contributor} Contributor
  * @typedef {import('remark-contributors').ContributorObject} ContributorObject
+ * @typedef {import('type-fest').PackageJson} PackageJson
+ * @typedef {import('vfile').VFile} VFile
+ */
+
+/**
+ * @typedef CleanContributor
+ *   Contributor with cleaned up data.
+ * @property {number} commits
+ *   Number of commits.
+ * @property {string} email
+ *   Email.
+ * @property {string | undefined} github
+ *   GitHub username.
+ * @property {string} name
+ *   Name.
+ * @property {Social | undefined} social
+ *   Social profile.
+ *
+ * @typedef RawContributor
+ *   Contributor found by `contributorsFromGit`.
+ * @property {number} commits
+ *   Number of commits.
+ * @property {string} name
+ *   Name.
+ * @property {string} email
+ *   Email.
+ *
+ * @typedef ContributorsModule
+ *   Contributors module.
+ * @property {Array<Contributor> | null | undefined} [contributors]
+ *   Named export.
+ * @property {Array<Contributor> | null | undefined} [default]
+ *   Default export.
  *
  * @typedef Options
  *   Configuration.
- * @property {string|Contributor[]} [contributors]
- *   List of contributors to inject.
+ * @property {boolean | null | undefined} [appendIfMissing=false]
+ *   Inject the section if there is none (default: `false`).
+ * @property {Array<Contributor> | string | null | undefined} [contributors]
+ *   List of contributors to inject (optional).
  *   Defaults to the `contributors` field in the closest `package.json` upwards
  *   from the processed file, if there is one.
  *   Supports the string form (`name <email> (url)`) as well.
  *   Fails if no contributors are found or given.
- * @property {boolean} [appendIfMissing=false]
- *   Inject the section if there is none.
- * @property {string} [cwd]
- *   Working directory from which to resolve a `contributors` module, if any.
- * @property {number} [limit=0]
- *   Limit the rendered contributors.
+ * @property {string | null | undefined} [cwd]
+ *   Working directory from which to resolve a `contributors` module, if any
+ *   (default: `file.cwd`).
+ * @property {number | null | undefined} [limit=0]
+ *   Limit the rendered contributors (default: `0`).
  *   A limit of `0` (or lower) includes all contributors.
  *   If `limit` is given, only the top `<limit>` contributors, sorted by commit
  *   count, are rendered.
+ *
+ * @typedef Social
+ *   Social profile.
+ * @property {string} text
+ *   Text.
+ * @property {string} url
+ *   URL.
  */
 
+import fs from 'node:fs/promises'
 import process from 'node:process'
 import path from 'node:path'
 // @ts-expect-error: untyped.
-import gitContributors from 'contributors-from-git'
-import remarkContributors from 'remark-contributors'
-import {read} from 'to-vfile'
-import {findUpOne} from 'vfile-find-up'
+import contributorsFromGit from 'contributors-from-git'
+import dlv from 'dlv'
 import {loadPlugin} from 'load-plugin'
 import {headingRange} from 'mdast-util-heading-range'
 import parseAuthor from 'parse-author'
-import dlv from 'dlv'
+import remarkContributors from 'remark-contributors'
+import {findUpOne} from 'vfile-find-up'
 import {defaultFormatters} from './formatters.js'
 
-const plugin = 'remark-git-contributors'
 const noreply = '@users.noreply.github.com'
 const headingExpression = /^contributors$/i
 const idFields = ['email', 'name', 'github', 'social.url']
 
 /**
- * Plugin to generate a list of Git contributors.
+ * Generate a list of Git contributors.
  *
- * @type {import('unified').Plugin<[(string|Options)?]|void[], Root>}
- * @returns {(node: Root, file: VFile) => Promise<void>}
+ * @param {Readonly<Options> | string | null | undefined} [options]
+ *   Configuration (optional);
+ *   passing `string` is as if passing `options.contributors`.
+ * @returns
+ *   Transform.
  */
-export default function remarkGitContributors(options = {}) {
-  /**
-   * @typedef {import('type-fest').PackageJson} PackageJson
-   *
-   * @typedef CleanContributor
-   * @property {string} email
-   * @property {number} commits
-   * @property {string} name
-   * @property {string|undefined} github
-   * @property {{url: string, text: string}|undefined} social
-   */
-
+export default function remarkGitContributors(options) {
   const settings =
-    typeof options === 'string' ? {contributors: options} : options
+    typeof options === 'string' ? {contributors: options} : options || {}
 
-  return async function (root, file) {
-    let found = false
-
-    headingRange(root, headingExpression, () => {
-      found = true
-    })
-
+  /**
+   * Transform.
+   *
+   * @param {Root} tree
+   *   Tree.
+   * @param {VFile} file
+   *   File.
+   * @returns {Promise<undefined>}
+   *   Nothing.
+   */
+  return async function (tree, file) {
     // Skip work if there’s no Contributors heading.
     // remark-contributors also does this so this is an optimization.
-    if (!found && !settings.appendIfMissing) {
-      return
+    if (!settings.appendIfMissing) {
+      let found = false
+
+      headingRange(tree, headingExpression, function () {
+        found = true
+      })
+
+      if (!found) return
     }
 
     const cwd = path.resolve(settings.cwd || file.cwd)
-    // Else is for stdin, typically not used.
-    /* c8 ignore next */
+    /* c8 ignore next -- verbose to test. */
     const base = file.dirname ? path.resolve(cwd, file.dirname) : cwd
     const indices = await indexContributors(cwd, settings.contributors)
     const pkgFile = await findUpOne('package.json', base)
@@ -85,12 +125,11 @@ export default function remarkGitContributors(options = {}) {
     let pkg = {}
 
     if (pkgFile) {
-      await read(pkgFile)
-      pkg = JSON.parse(String(pkgFile))
+      pkg = JSON.parse(String(await fs.readFile(pkgFile.path)))
     }
 
-    // @ts-expect-error: indexable.
-    indexContributor(indices, pkg.author)
+    // Cast because objects are indexable.
+    indexContributor(indices, /** @type {Contributor} */ (pkg.author))
 
     if (Array.isArray(pkg.contributors)) {
       let index = -1
@@ -99,12 +138,14 @@ export default function remarkGitContributors(options = {}) {
       }
     }
 
-    await new Promise((resolve, reject) => {
-      gitContributors(cwd, ongitcontributors)
+    await new Promise(function (resolve, reject) {
+      contributorsFromGit(cwd, ongitcontributors)
 
       /**
-       * @param {Error|null} error
-       * @param {Array.<{name: string, email: string, commits: number}>} gitContributors
+       * @param {Error | null} error
+       *   Error.
+       * @param {Array<RawContributor>} gitContributors
+       *   Contributors.
        */
       // eslint-disable-next-line complexity
       function ongitcontributors(error, gitContributors) {
@@ -113,7 +154,7 @@ export default function remarkGitContributors(options = {}) {
             file.message(
               'could not get Git contributors as there are no commits yet',
               undefined,
-              `${plugin}:no-commits`
+              'remark-git-contributors:no-commits'
             )
             resolve(undefined)
             return
@@ -126,7 +167,7 @@ export default function remarkGitContributors(options = {}) {
         /** @type {Map<string, Map<string, CleanContributor>>} */
         const idFieldToMap = new Map()
 
-        /** @type {CleanContributor[]} */
+        /** @type {Array<CleanContributor>} */
         let contributors = []
         let index = -1
 
@@ -137,7 +178,7 @@ export default function remarkGitContributors(options = {}) {
             file.message(
               `no git email for ${name}`,
               undefined,
-              `${plugin}:require-git-email`
+              'remark-git-contributors:require-git-email'
             )
             continue
           }
@@ -154,14 +195,14 @@ export default function remarkGitContributors(options = {}) {
 
           if (
             email.endsWith('@greenkeeper.io') ||
-            name === 'Greenkeeper' ||
+            name.toLowerCase() === 'greenkeeper' ||
             metadata.github === 'greenkeeper[bot]' ||
             metadata.github === 'greenkeeperio-bot'
           ) {
             continue
           }
 
-          /** @type {CleanContributor['social']} */
+          /** @type {Social | undefined} */
           let social
 
           if (metadata.twitter) {
@@ -178,7 +219,7 @@ export default function remarkGitContributors(options = {}) {
               file.message(
                 `invalid twitter handle for ${email}`,
                 undefined,
-                `${plugin}:valid-twitter`
+                'remark-git-contributors:valid-twitter'
               )
             }
           } else if (metadata.mastodon) {
@@ -195,14 +236,14 @@ export default function remarkGitContributors(options = {}) {
               file.message(
                 `invalid mastodon handle for ${email}`,
                 undefined,
-                `${plugin}:valid-mastodon`
+                'remark-git-contributors:valid-mastodon'
               )
             }
           } else {
             file.info(
               `no social profile for ${email}`,
               undefined,
-              `${plugin}:social`
+              'remark-git-contributors:social'
             )
           }
 
@@ -248,32 +289,41 @@ export default function remarkGitContributors(options = {}) {
           }
         }
 
-        contributors.sort(
-          (a, b) => b.commits - a.commits || a.name.localeCompare(b.name)
-        )
+        contributors.sort(function (a, b) {
+          return b.commits - a.commits || a.name.localeCompare(b.name)
+        })
 
         if (settings.limit && settings.limit > 0) {
           contributors = contributors.slice(0, settings.limit)
         }
 
-        const formatters = Object.assign({}, defaultFormatters)
+        const formatters = {...defaultFormatters}
 
         // Exclude GitHub column if all cells would be empty
-        if (contributors.every((c) => !c.github)) {
+        if (
+          contributors.every(function (c) {
+            return !c.github
+          })
+        ) {
           formatters.github = {exclude: true}
         }
 
         // Exclude Social column if all cells would be empty
-        if (contributors.every((c) => !c.social)) {
+        if (
+          contributors.every(function (c) {
+            return !c.social
+          })
+        ) {
           formatters.social = {exclude: true}
         }
 
         remarkContributors({
           contributors,
           formatters,
+          // @ts-expect-error: to do: update.
           appendIfMissing: settings.appendIfMissing,
           align: 'left'
-        })(root, file).then(resolve, reject)
+        })(tree, file).then(resolve, reject)
       }
     })
   }
@@ -281,7 +331,11 @@ export default function remarkGitContributors(options = {}) {
 
 /**
  * @param {string} cwd
- * @param {Contributor[]|string|undefined} contributors
+ *   Working directory.
+ * @param {Array<Readonly<Contributor>> | string | null | undefined} contributors
+ *   List of contributors to index.
+ * @returns {Promise<Record<string, Record<string, ContributorObject>>>}
+ *   Indices.
  */
 async function indexContributors(cwd, contributors) {
   /** @type {Record<string, Record<string, ContributorObject>>} */
@@ -292,10 +346,9 @@ async function indexContributors(cwd, contributors) {
   }
 
   if (typeof contributors === 'string') {
-    const exported =
-      /** @type {{contributors?: Contributor[], default?: Contributor[]}} */ (
-        await loadPlugin(contributors, {cwd: [cwd, process.cwd()], key: false})
-      )
+    const exported = /** @type {ContributorsModule} */ (
+      await loadPlugin(contributors, {cwd: [cwd, process.cwd()], key: false})
+    )
 
     if (Array.isArray(exported.contributors)) {
       contributors = exported.contributors
@@ -314,26 +367,30 @@ async function indexContributors(cwd, contributors) {
     indexContributor(indices, contributor)
   }
 
-  // Chromium coverage bug on Node 12.
-  /* c8 ignore next 2 */
   return indices
 }
 
 /**
  * @param {Record<string, Record<string, ContributorObject>>} indices
+ *   Indices.
  * @param {Contributor} contributor
+ *   Contributor.
+ * @returns {undefined}
+ *   Nothing.
  */
 function indexContributor(indices, contributor) {
-  /** @type {ContributorObject} */
-  // @ts-expect-error: `parseAuthor` result is indexable.
   const contributorObject =
     typeof contributor === 'string'
-      ? parseAuthor(contributor)
-      : Object.assign({}, contributor)
+      ? // Cast because objects are indexable.
+        /** @type {ContributorObject} */ (parseAuthor(contributor))
+      : {...contributor}
 
-  /** @type {unknown[]} */
-  // @ts-expect-error: assume array.
-  const emails = [...(contributorObject.emails || [])]
+  /** @type {Array<unknown>} */
+  /* c8 ignore next 3 -- verbose to test. */
+  const emails = Array.isArray(contributorObject.emails)
+    ? // type-coverage:ignore-next-line
+      [...contributorObject.emails]
+    : []
 
   if (contributorObject.email) {
     emails.push(contributorObject.email)
@@ -349,18 +406,18 @@ function indexContributor(indices, contributor) {
 
 /**
  * @param {Record<string, ContributorObject>} index
+ *   Index.
  * @param {unknown} raw
+ *   Raw value.
  * @param {ContributorObject} contributor
+ *   Contributor.
+ * @returns {undefined}
+ *   Nothing.
  */
 function indexValue(index, raw, contributor) {
   if (raw) {
-    const value = String(raw).toLowerCase()
-
-    if (index[value]) {
-      // Merge in place
-      Object.assign(contributor, index[value])
-    }
-
-    index[value] = contributor
+    const key = String(raw).toLowerCase()
+    const value = index[key]
+    index[key] = value ? {...contributor, ...value} : contributor
   }
 }

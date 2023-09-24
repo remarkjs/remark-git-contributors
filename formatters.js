@@ -1,22 +1,21 @@
 /**
  * @typedef {import('remark-contributors').FormatterObject} FormatterObject
+ * @typedef {import('./index.js').Social} Social
  */
 
 /**
- * @type {Record<string, FormatterObject>}
+ * Default formatters.
+ *
+ * @type {Readonly<Record<string, Readonly<FormatterObject>>>}
  */
 export const defaultFormatters = {
   email: {exclude: true},
   commits: {exclude: true},
   social: {
-    label: 'Social',
     format(value) {
-      const object = /** @type {{url: string, text: string}|undefined} */ (
-        value
-      )
+      const object = /** @type {Social | undefined} */ (value)
 
-      // Shouldn’t happen, but let’s keep it here just to be sure.
-      /* c8 ignore next 3 */
+      /* c8 ignore next 3 -- shouldn’t happen, but let’s keep it here just to be sure. */
       if (!object) {
         return ''
       }
@@ -28,6 +27,7 @@ export const defaultFormatters = {
           {type: 'strong', children: [{type: 'text', value: object.text}]}
         ]
       }
-    }
+    },
+    label: 'Social'
   }
 }

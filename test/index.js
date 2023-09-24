@@ -6,8 +6,8 @@
 /**
  * @typedef CommitOptions
  *   Configuration to set up Git.
- * @property {Array<Users> | null | undefined} [users]
- *   Users.
+ * @property {ReadonlyArray<Readonly<User>> | null | undefined} [users]
+ *   Users (optional).
  * @property {string | null | undefined} [main]
  *   Contents of file initially (optional).
  * @property {boolean | null | undefined} [skipInit]
@@ -15,23 +15,24 @@
  *
  * @typedef PackageOptions
  *   Configuration to set up a `package.json`.
- * @property {Person | null | undefined} [author]
- *   Author.
- * @property {Array<Person> | null | undefined} [contributors]
- *   Contributors.
+ * @property {Readonly<Person> | null | undefined} [author]
+ *   Author (optional).
+ * @property {ReadonlyArray<Readonly<Person>> | null | undefined} [contributors]
+ *   Contributors (optional).
  * @property {boolean | null | undefined} [broken]
  *   Break the `package.json` (default: `false`).
  *
- * @typedef {[string, string]} Users
+ * @typedef {[string, string]} User
+ *   User name and email.
  */
 
 import assert from 'node:assert/strict'
-import fs from 'node:fs/promises'
-import path from 'node:path'
 import {execFile as execFileCallback} from 'node:child_process'
+import fs from 'node:fs/promises'
 import process from 'node:process'
-import {promisify} from 'node:util'
 import test from 'node:test'
+import {pathToFileURL} from 'node:url'
+import {promisify} from 'node:util'
 import {remark} from 'remark'
 import remarkGfm from 'remark-gfm'
 import semver from 'semver'
@@ -52,6 +53,12 @@ const testUrl = 'https://localhost'
 const fixtures = new URL('fixture/', import.meta.url)
 
 test('remark-git-contributors', async function (t) {
+  await t.test('should expose the public api', async function () {
+    assert.deepEqual(Object.keys(await import('../index.js')).sort(), [
+      'default'
+    ])
+  })
+
   await t.test('should work', async function () {
     const cwd = temporary()
     const [input, expected] = await getFixtures('00')
@@ -432,11 +439,11 @@ test('remark-git-contributors', async function (t) {
   })
 
   await t.test('should work w/ multiple authors', async function () {
-    /** @type {Users} */
+    /** @type {User} */
     const topContributor = ['Alpha', 'alpha@localhost']
-    /** @type {Users} */
+    /** @type {User} */
     const otherContributor = ['Bravo', 'bravo@localhost']
-    /** @type {Users} */
+    /** @type {User} */
     const anotherContributor = ['Charlie', 'charlie@localhost']
     const cwd = temporary()
     const [input, expected] = await getFixtures('06')
@@ -464,9 +471,9 @@ test('remark-git-contributors', async function (t) {
   await t.test(
     'should work w/ multiple authors and `options.limit`',
     async function () {
-      /** @type {Users} */
+      /** @type {User} */
       const topContributor = ['Alpha', 'alpha@localhost']
-      /** @type {Users} */
+      /** @type {User} */
       const otherContributor = ['Bravo', 'bravo@localhost']
       const cwd = temporary()
       const [input, expected] = await getFixtures('07')
@@ -651,7 +658,7 @@ test('remark-git-contributors', async function (t) {
 /**
  * @param {string} cwd
  *   Path to folder.
- * @param {PackageOptions | null | undefined} [options]
+ * @param {Readonly<PackageOptions> | null | undefined} [options]
  *   Configuration (optional).
  * @returns {Promise<undefined>}
  *   Nothing.
@@ -670,13 +677,13 @@ async function createPackage(cwd, options) {
     value = value.slice(1)
   }
 
-  await fs.writeFile(path.join(cwd, 'package.json'), value)
+  await fs.writeFile(new URL('package.json', pathToFileURL(cwd) + '/'), value)
 }
 
 /**
  * @param {string} cwd
  *   Path to folder.
- * @param {CommitOptions | null | undefined} [options]
+ * @param {Readonly<CommitOptions> | null | undefined} [options]
  *   Configuration (optional).
  * @returns {Promise<undefined>}
  *   Nothing.
@@ -693,7 +700,7 @@ async function createCommits(cwd, options) {
   while (++index < users.length) {
     const [name, email] = users[index]
     await fs.writeFile(
-      path.join(cwd, 'index.js'),
+      new URL('index.js', pathToFileURL(cwd) + '/'),
       settings.main && index === 0 ? settings.main : '// ' + index + '\n'
     )
     await execFile('git', ['config', 'user.name', name], {cwd})
