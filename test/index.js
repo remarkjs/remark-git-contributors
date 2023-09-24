@@ -76,7 +76,7 @@ test('remark-git-contributors', async function (t) {
       file.messages.map(function (d) {
         return d.reason
       }),
-      ['no social profile for ' + testEmail]
+      ['Unexpected missing social handle for contributor `test@localhost`']
     )
   })
 
@@ -100,7 +100,7 @@ test('remark-git-contributors', async function (t) {
       file.messages.map(function (d) {
         return d.reason
       }),
-      ['no social profile for ' + testEmail]
+      ['Unexpected missing social handle for contributor `test@localhost`']
     )
   })
 
@@ -124,7 +124,7 @@ test('remark-git-contributors', async function (t) {
       file.messages.map(function (d) {
         return d.reason
       }),
-      ['no social profile for ' + testEmail]
+      ['Unexpected missing social handle for contributor `test@localhost`']
     )
   })
 
@@ -244,10 +244,7 @@ test('remark-git-contributors', async function (t) {
         .process(new VFile({cwd, path: 'input.md', value: input}))
       assert.fail()
     } catch (error) {
-      assert.match(
-        String(error),
-        /TypeError: The "contributors" option must be \(or resolve to\) an array/
-      )
+      assert.match(String(error), /Unexpected missing contributors/)
     }
   })
 
@@ -268,10 +265,7 @@ test('remark-git-contributors', async function (t) {
           .process(new VFile({cwd, path: 'input.md', value: input}))
         assert.fail()
       } catch (error) {
-        assert.match(
-          String(error),
-          /TypeError: The "contributors" option must be \(or resolve to\) an array/
-        )
+        assert.match(String(error), /Unexpected missing contributors/)
       }
     }
   )
@@ -309,7 +303,7 @@ test('remark-git-contributors', async function (t) {
         file.messages.map(function (d) {
           return d.reason
         }),
-        ['no social profile for ' + testEmail]
+        ['Unexpected missing social handle for contributor `test@localhost`']
       )
     }
   )
@@ -331,7 +325,9 @@ test('remark-git-contributors', async function (t) {
       file.messages.map(function (d) {
         return d.reason
       }),
-      ['no social profile for ' + email]
+      [
+        'Unexpected missing social handle for contributor `944406+wooorm@users.noreply.github.com`'
+      ]
     )
   })
 
@@ -375,7 +371,7 @@ test('remark-git-contributors', async function (t) {
       file.messages.map(function (d) {
         return d.reason
       }),
-      ['invalid twitter handle for ' + testEmail]
+      ['Unexpected invalid Twitter handle `@` for contributor `test@localhost`']
     )
   })
 
@@ -414,7 +410,9 @@ test('remark-git-contributors', async function (t) {
       file.messages.map(function (d) {
         return d.reason
       }),
-      ['invalid mastodon handle for ' + testEmail]
+      [
+        'Unexpected invalid Mastodon handle `@foo` for contributor `test@localhost`'
+      ]
     )
   })
 
@@ -535,7 +533,7 @@ test('remark-git-contributors', async function (t) {
         .process(new VFile({cwd, path: 'input.md', value: input}))
       assert.fail()
     } catch (error) {
-      assert.match(String(error), /Error: Could not get Git contributors/)
+      assert.match(String(error), /Cannot get Git contributors/)
     }
   })
 
@@ -557,7 +555,7 @@ test('remark-git-contributors', async function (t) {
         file.messages.map(function (d) {
           return d.reason
         }),
-        ['could not get Git contributors as there are no commits yet']
+        ['Unexpected empty Git history, expected commits']
       )
     }
   )
