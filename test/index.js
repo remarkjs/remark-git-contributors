@@ -478,6 +478,7 @@ function run(fixture, options_, test) {
 
   remark()
     .use(remarkGfm)
+    // @ts-expect-error: to do: remove.
     .use(remarkGitContributors, options)
     .process(input, (error, file) => {
       const actual = String(file).trim()
