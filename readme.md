@@ -422,8 +422,8 @@ abide by its terms.
 
 | Name                | GitHub                                       | Social                                                |
 | :------------------ | :------------------------------------------- | :---------------------------------------------------- |
-| **Vincent Weevers** | [**@vweevers**](https://github.com/vweevers) | [**@vweevers@twitter**](https://twitter.com/vweevers) |
 | **Titus Wormer**    | [**@wooorm**](https://github.com/wooorm)     | [**@wooorm@twitter**](https://twitter.com/wooorm)     |
+| **Vincent Weevers** | [**@vweevers**](https://github.com/vweevers) | [**@vweevers@twitter**](https://twitter.com/vweevers) |
 
 ## License
 

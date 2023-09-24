@@ -8,10 +8,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import {execFileSync} from 'node:child_process'
+import process from 'node:process'
 import test from 'tape'
 import {readSync} from 'to-vfile'
 import {remark} from 'remark'
 import remarkGfm from 'remark-gfm'
+import semver from 'semver'
 // @ts-expect-error: untyped.
 import tmpgen from 'tmpgen'
 import remarkGitContributors from '../index.js'
@@ -370,7 +372,10 @@ test('package.json contributors', (t) => {
 
 test('broken package.json', (t) => {
   run('00', {pkgBroken: true}, ({err}) => {
-    t.ok(String(err).startsWith('SyntaxError: Unexpected token'))
+    const starts = semver.satisfies(process.version, '>=20')
+      ? 'SyntaxError: Unexpected non-whitespace character'
+      : 'SyntaxError: Unexpected token'
+    t.ok(String(err).startsWith(starts))
     t.end()
   })
 })
