@@ -35,11 +35,11 @@ import {pathToFileURL} from 'node:url'
 import {promisify} from 'node:util'
 import {remark} from 'remark'
 import remarkGfm from 'remark-gfm'
+import remarkGitContributors from 'remark-git-contributors'
 import semver from 'semver'
 // @ts-expect-error: untyped.
 import tmpgen from 'tmpgen'
 import {VFile} from 'vfile'
-import remarkGitContributors from '../index.js'
 
 const execFile = promisify(execFileCallback)
 
@@ -54,9 +54,10 @@ const fixtures = new URL('fixture/', import.meta.url)
 
 test('remark-git-contributors', async function (t) {
   await t.test('should expose the public api', async function () {
-    assert.deepEqual(Object.keys(await import('../index.js')).sort(), [
-      'default'
-    ])
+    assert.deepEqual(
+      Object.keys(await import('remark-git-contributors')).sort(),
+      ['default']
+    )
   })
 
   await t.test('should work', async function () {
