@@ -1,6 +1,6 @@
 {
   "name": "remark-git-contributors",
-  "version": "5.0.1",
+  "version": "5.0.2",
   "description": "remark plugin to generate a list of Git contributors",
   "license": "MIT",
   "keywords": [
