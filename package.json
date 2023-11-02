@@ -52,7 +52,7 @@
     "@types/mdast": "^4.0.0",
     "contributors-from-git": "^1.0.0",
     "dlv": "^1.0.0",
-    "load-plugin": "^5.0.0",
+    "load-plugin": "^6.0.0",
     "mdast-util-heading-range": "^4.0.0",
     "parse-author": "^2.0.0",
     "remark-contributors": "^7.0.0",
