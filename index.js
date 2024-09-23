@@ -1,6 +1,7 @@
 /**
  * @typedef {import('remark-contributors').Contributor} Contributor
+ * @typedef {import('./lib/index.js').Filter} Filter
  * @typedef {import('./lib/index.js').Options} Options
  */
 
-export {default} from './lib/index.js'
+export {defaultFilter, default} from './lib/index.js'

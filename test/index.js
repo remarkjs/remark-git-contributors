@@ -25,7 +25,7 @@
  * @property {boolean | null | undefined} [broken]
  *   Break the `package.json` (default: `false`).
  *
- * @typedef {[string, string]} User
+ * @typedef {[name: string, email: string]} User
  *   User name and email.
  */
 
@@ -59,7 +59,7 @@ test('remark-git-contributors', async function (t) {
   await t.test('should expose the public api', async function () {
     assert.deepEqual(
       Object.keys(await import('remark-git-contributors')).sort(),
-      ['default']
+      ['default', 'defaultFilter']
     )
   })
 
@@ -354,6 +354,39 @@ test('remark-git-contributors', async function (t) {
         /Error: Missing required `contributors` in settings/
       )
     }
+  })
+
+  await t.test('should support a custom `filter`', async function () {
+    const cwd = temporary()
+    const [input] = await getFixtures('00')
+
+    await createPackage(cwd)
+    await createCommits(cwd, {
+      users: [
+        ['beep', 'beep@boop.io'],
+        ['bea', 'äkta@människor.io']
+      ]
+    })
+
+    const file = await remark()
+      .use(remarkGfm)
+      .use(remarkGitContributors, {
+        filter(d) {
+          return d.name !== 'beep'
+        }
+      })
+      .process(new VFile({cwd, path: 'input.md', value: input}))
+
+    assert.equal(
+      String(file),
+      '# Contributors\n\n| Name    |\n| :------ |\n| **bea** |\n'
+    )
+    assert.deepEqual(
+      file.messages.map(function (d) {
+        return d.reason
+      }),
+      ['Unexpected missing social handle for contributor `äkta@människor.io`']
+    )
   })
 
   await t.test('should work w/ invalid twitter', async function () {

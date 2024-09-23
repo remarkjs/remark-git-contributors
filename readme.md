@@ -17,8 +17,10 @@
 * [Install](#install)
 * [Use](#use)
 * [API](#api)
+  * [`defaultFilter(contributor, metadata)`](#defaultfiltercontributor-metadata)
   * [`unified().use(remarkGitContributors[, options])`](#unifieduseremarkgitcontributors-options)
   * [`Contributor`](#contributor)
+  * [`Filter`](#filter)
   * [`Options`](#options)
 * [Examples](#examples)
   * [Example: CLI](#example-cli)
@@ -126,6 +128,11 @@ MIT
 This package exports no identifiers.
 The default export is [`remarkGitContributors`][api-remark-git-contributors].
 
+### `defaultFilter(contributor, metadata)`
+
+Default filter for contributors ([`Filter`][api-filter]);
+currently filters out Greenkeeper.
+
 ### `unified().use(remarkGitContributors[, options])`
 
 Generate a list of Git contributors.
@@ -158,6 +165,21 @@ type).
 type Contributor = Record<string, unknown> | string
 ```
 
+### `Filter`
+
+Filter contributors (TypeScript type).
+
+###### Parameters
+
+* `contributor` (`Contributor`)
+  — contributor found by `contributorsFromGit`
+* `metadata` (`Record<string, unknown>`)
+  — associated metadata found in `package.json` or `options.contributors`
+
+###### Returns
+
+Whether to include the contributor (`boolean`).
+
 ### `Options`
 
 Configuration (TypeScript type).
@@ -175,6 +197,9 @@ Configuration (TypeScript type).
   throws if no contributors are found or given
 * `cwd` (`string`, default: `file.cwd`)
   — working directory from which to resolve a `contributors` module, if any
+* `filter` ([`Filter`][api-filter], default:
+  [`defaultFilter`][api-default-filter])
+  — filter contributors
 * `limit` (`number`, default: `0`)
   — limit the rendered contributors;
   `0` (or lower) includes all contributors;
@@ -384,7 +409,9 @@ export default contributors
 ## Types
 
 This package is fully typed with [TypeScript][].
-It exports the additional types [`Contributor`][api-contributor] and
+It exports the additional types
+[`Contributor`][api-contributor],
+[`Filter`][api-filter], and
 [`Options`][api-options].
 
 ## Compatibility
@@ -510,6 +537,10 @@ abide by its terms.
 [file-package-json]: package.json
 
 [api-contributor]: #contributor
+
+[api-default-filter]: #defaultfiltercontributor-metadata
+
+[api-filter]: #filter
 
 [api-options]: #options
 
