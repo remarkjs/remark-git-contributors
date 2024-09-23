@@ -1,6 +1,9 @@
 /**
- * @typedef {import('type-fest').PackageJson} PackageJson
- * @typedef {import('type-fest').PackageJson.Person} Person
+ * @import {PackageJson} from 'type-fest'
+ */
+
+/**
+ * @typedef {PackageJson.Person} Person
  */
 
 /**
