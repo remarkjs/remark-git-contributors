@@ -12,25 +12,25 @@
 
 ## Contents
 
-*   [What is this?](#what-is-this)
-*   [When should I use this?](#when-should-i-use-this)
-*   [Install](#install)
-*   [Use](#use)
-*   [API](#api)
-    *   [`unified().use(remarkGitContributors[, options])`](#unifieduseremarkgitcontributors-options)
-    *   [`Contributor`](#contributor)
-    *   [`Options`](#options)
-*   [Examples](#examples)
-    *   [Example: CLI](#example-cli)
-    *   [Example: CLI in npm scripts](#example-cli-in-npm-scripts)
-    *   [Example: `appendIfMissing`](#example-appendifmissing)
-    *   [Example: metadata](#example-metadata)
-*   [Types](#types)
-*   [Compatibility](#compatibility)
-*   [Security](#security)
-*   [Contribute](#contribute)
-*   [Contributors](#contributors)
-*   [License](#license)
+* [What is this?](#what-is-this)
+* [When should I use this?](#when-should-i-use-this)
+* [Install](#install)
+* [Use](#use)
+* [API](#api)
+  * [`unified().use(remarkGitContributors[, options])`](#unifieduseremarkgitcontributors-options)
+  * [`Contributor`](#contributor)
+  * [`Options`](#options)
+* [Examples](#examples)
+  * [Example: CLI](#example-cli)
+  * [Example: CLI in npm scripts](#example-cli-in-npm-scripts)
+  * [Example: `appendIfMissing`](#example-appendifmissing)
+  * [Example: metadata](#example-metadata)
+* [Types](#types)
+* [Compatibility](#compatibility)
+* [Security](#security)
+* [Contribute](#contribute)
+* [Contributors](#contributors)
+* [License](#license)
 
 ## What is this?
 
@@ -132,16 +132,16 @@ Generate a list of Git contributors.
 
 In short, this plugin:
 
-*   looks for the first heading matching `/^contributors$/i`
-*   if no heading is found and `appendIfMissing` is set, injects such a heading
-*   if there is a heading, replaces everything in that section with a new table
-    with Git contributors
+* looks for the first heading matching `/^contributors$/i`
+* if no heading is found and `appendIfMissing` is set, injects such a heading
+* if there is a heading, replaces everything in that section with a new table
+  with Git contributors
 
 ###### Parameters
 
-*   `options` ([`Options`][api-options] or `string`, optional)
-    — configuration;
-    passing `string` is as if passing `options.contributors`
+* `options` ([`Options`][api-options] or `string`, optional)
+  — configuration;
+  passing `string` is as if passing `options.contributors`
 
 ###### Returns
 
@@ -164,22 +164,22 @@ Configuration (TypeScript type).
 
 ###### Fields
 
-*   `appendIfMissing` (`boolean`, default: `false`)
-    — inject the section if there is none
-*   `contributors` ([`Array<Contributor>`][api-contributor] or `string`,
-    optional)
-    — list of contributors to inject;
-    defaults to the `contributors` field in the closest `package.json` upwards
-    from the processed file, if there is one;
-    supports the string form (`name <email> (url)`) as well;
-    throws if no contributors are found or given
-*   `cwd` (`string`, default: `file.cwd`)
-    — working directory from which to resolve a `contributors` module, if any
-*   `limit` (`number`, default: `0`)
-    — limit the rendered contributors;
-    `0` (or lower) includes all contributors;
-    if `limit` is given, only the top `<limit>` contributors, sorted by commit
-    count, are rendered
+* `appendIfMissing` (`boolean`, default: `false`)
+  — inject the section if there is none
+* `contributors` ([`Array<Contributor>`][api-contributor] or `string`,
+  optional)
+  — list of contributors to inject;
+  defaults to the `contributors` field in the closest `package.json` upwards
+  from the processed file, if there is one;
+  supports the string form (`name <email> (url)`) as well;
+  throws if no contributors are found or given
+* `cwd` (`string`, default: `file.cwd`)
+  — working directory from which to resolve a `contributors` module, if any
+* `limit` (`number`, default: `0`)
+  — limit the rendered contributors;
+  `0` (or lower) includes all contributors;
+  if `limit` is given, only the top `<limit>` contributors, sorted by commit
+  count, are rendered
 
 ## Examples
 
@@ -337,9 +337,9 @@ Or on the CLI (in `package.json`):
 
 The value for `contributors` is either:
 
-*   an array in the form of `[{ email, name, … }, … ]`;
-*   a module id, or path to a file, that exports `contributors` as the default
-    export or as a `contributors` named export
+* an array in the form of `[{ email, name, … }, … ]`;
+* a module id, or path to a file, that exports `contributors` as the default
+  export or as a `contributors` named export
 
 > 👉 **Note**: contributors that are not in Git history are excluded.
 > This way the `contributors` metadata can be reused in multiple projects.
@@ -353,11 +353,11 @@ by using a [`.mailmap` file][git-mailmap].
 
 The supported properties on contributors are:
 
-*   `email` — person’s email (example: `sara@example.com`)
-*   `github` — GitHub username (example: `sara123`)
-*   `mastodon` — Mastodon (`@user@domain`)
-*   `name` — person’s name (example: `Sara`)
-*   `twitter` — Twitter username (example: `the_sara`)
+* `email` — person’s email (example: `sara@example.com`)
+* `github` — GitHub username (example: `sara123`)
+* `mastodon` — Mastodon (`@user@domain`)
+* `name` — person’s name (example: `Sara`)
+* `twitter` — Twitter username (example: `the_sara`)
 
 An example of a module is:
 

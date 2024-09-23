@@ -664,14 +664,15 @@ test('remark-git-contributors', async function (t) {
  */
 async function createPackage(cwd, options) {
   const settings = options || {}
-  const pkg = /** @type {PackageJson} */ ({
+  const packageData = /** @type {PackageJson} */ ({
     author: settings.author || undefined,
     contributors: settings.contributors || undefined,
     name: 'example',
     private: true,
     type: 'module'
   })
-  let value = JSON.stringify(pkg)
+  let value = JSON.stringify(packageData)
+
   if (settings.broken) {
     value = value.slice(1)
   }
